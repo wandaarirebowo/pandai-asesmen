@@ -500,7 +500,7 @@ function bukaEditor(soalId) {
   $('fTanya').value = s ? s.pertanyaan : '';
   $('fIndikator').value = '';
   $('fLevel').value = s ? (s.levelKognitif || 'L1') : 'L1';
-  $('fAcakOpsi').checked = s ? s.acakOpsi !== 'FALSE' : true;
+  $('fAcakOpsi').checked = s ? !(s.acakOpsi === false || s.acakOpsi === 'FALSE') : true;
   $('fPembahasan').value = s ? (s.pembahasan || '') : '';
   var cek = {}; try { cek = JSON.parse(s ? s.checklistKaidah || '{}' : '{}'); } catch (e) {}
   document.querySelectorAll('.cekK').forEach(function (c) { c.checked = !!cek[c.value]; });
@@ -693,7 +693,7 @@ function bukaPaket(paketId) {
       $('rTKA').value = p.tkaId || '';
     }
     $('rNomor').value = p.nomorPaket || 1; $('rDurasi').value = p.durasiMenit || 60;
-    $('rTampilSkor').checked = p.tampilkanSkor === 'TRUE';
+    $('rTampilSkor').checked = p.tampilkanSkor === true || p.tampilkanSkor === 'TRUE';
     butirTerpilih = d.soal.map(function (s) { return s.soalId; });
     gambarPilihButir();
     $('infoRevisi').style.display = 'block';
