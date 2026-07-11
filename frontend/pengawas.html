@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FFC53D">
+<title>PANDAI — Telaah Pengawas</title>
+<style>
+:root{
+  --kuning:#FFC53D; --biru:#4DA3FF; --koral:#FF7A59; --hijau:#3EC486;
+  --tinta:#2B3A55; --krem:#FFF8EC; --putih:#FFF;
+  --garis:rgba(62,196,134,.12); --radius:16px; --bayang:0 3px 0 rgba(43,58,85,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;color:var(--tinta);font-size:14.5px;
+  background:repeating-linear-gradient(to bottom, transparent 0 31px, var(--garis) 31px 32px),var(--krem);
+  padding-bottom:40px;}
+.app{max-width:640px;margin:0 auto;padding:10px 12px;}
+h2.judul-hal{font-size:20px;margin:10px 2px 12px;}
+h2.judul-hal small{font-weight:400;font-size:12.5px;color:#6b7690;display:block;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--putih);border-bottom:2px solid rgba(43,58,85,.12);
+  padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--hijau);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-weight:800;border:2px solid var(--tinta);flex:none;}
+.topbar .ident{flex:1;line-height:1.25;}
+.topbar .ident b{font-size:15px;}
+.topbar .ident span{font-size:11.5px;color:#6b7690;display:block;}
+.kartu{background:var(--putih);border:2px solid rgba(43,58,85,.12);border-radius:var(--radius);
+  box-shadow:var(--bayang);padding:14px;margin-bottom:12px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:13.5px;
+  font-weight:700;color:var(--tinta);background:var(--putih);border:2px solid var(--tinta);border-radius:999px;
+  padding:8px 14px;min-height:38px;cursor:pointer;box-shadow:0 2px 0 var(--tinta);user-select:none;}
+.btn:active{transform:translateY(2px);box-shadow:0 0 0 var(--tinta);}
+.btn-hijau{background:var(--hijau);color:#fff;border-color:#238b60;box-shadow:0 2px 0 #238b60;}
+.btn-koral{background:var(--koral);color:#fff;border-color:#c24a2e;box-shadow:0 2px 0 #c24a2e;}
+.btn-mini{font-size:12px;padding:5px 10px;min-height:30px;}
+.chip{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;
+  border:1.5px solid transparent;white-space:nowrap;}
+.c-biru{background:#E3F1FF;color:#1D6FCC;border-color:#9CCBFF;}
+.c-hijau{background:#E7FAF1;color:#1B8A5B;border-color:#9FE3C4;}
+.c-kuning{background:#FFF3D4;color:#9A6B00;border-color:#FFD98A;}
+.c-koral{background:#FFEAE3;color:#C2431F;border-color:#FFB49C;}
+.c-abu{background:#EEF0F4;color:#5B6779;border-color:#C9D0DB;}
+.filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.filter button{font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
+  border:2px solid rgba(43,58,85,.25);background:#fff;color:var(--tinta);border-radius:999px;padding:6px 12px;}
+.filter button.aktif{background:var(--tinta);color:#fff;border-color:var(--tinta);}
+.soal-item{border:2px solid rgba(43,58,85,.12);border-radius:14px;padding:11px 12px;margin-bottom:9px;background:#FFFDF5;}
+.soal-item .atas{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;align-items:center;}
+.soal-item p{margin:4px 0 8px;font-size:13.5px;line-height:1.5;}
+.stimulus-box{background:#F2F9FF;border:2px solid var(--biru);border-radius:12px;padding:10px 12px;
+  margin:8px 0;font-size:13px;white-space:pre-line;max-height:220px;overflow:auto;}
+.kunci-baris{font-size:12.5px;background:#E7FAF1;border:1.5px dashed #238b60;border-radius:8px;padding:6px 9px;margin-top:6px;}
+textarea{width:100%;font-family:inherit;font-size:14px;color:var(--tinta);
+  border:2px solid rgba(43,58,85,.25);border-radius:10px;padding:9px 10px;background:#fff;min-height:64px;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;background:var(--tinta);
+  color:#fff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:999px;opacity:0;
+  pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center;}
+.toast.aktif{opacity:1;}
+.kosong{color:#8a93a6;font-size:13px;text-align:center;padding:14px 0;}
+.muat{position:fixed;inset:0;z-index:200;background:rgba(255,248,236,.9);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;font-weight:800;}
+.muat .putar{width:44px;height:44px;border-radius:50%;border:5px solid rgba(43,58,85,.15);
+  border-top-color:var(--hijau);animation:putar .8s linear infinite;}
+@keyframes putar{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="muat" id="layarMuat"><div class="putar"></div><div id="pesanMuat">Memuat data…</div></div>
+
+<header class="topbar">
+  <div class="avatar" id="avatar">PW</div>
+  <div class="ident"><b id="namaSaya">…</b><span>Pengawas — penelaah paket soal</span></div>
+  <button class="btn btn-mini" onclick="PANDAI.keluar()">Keluar</button>
+</header>
+
+<div class="app">
+  <h2 class="judul-hal">🔍 Telaah Paket<small>Periksa butir terhadap kaidah penulisan soal, lalu setujui atau kembalikan untuk revisi</small></h2>
+
+  <div class="filter" id="filterStatus">
+    <button class="aktif" data-f="telaah">Menunggu telaah</button>
+    <button data-f="disetujui">Sudah disetujui</button>
+    <button data-f="terbit">Terbit</button>
+  </div>
+
+  <div id="daftarPaket"><p class="kosong">Memuat…</p></div>
+  <div id="detailPaket" style="display:none"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var SESI = PANDAI.sesi();
+var PAKET = [], filterAktif = 'telaah';
+
+(function () {
+  if (!PANDAI.adaBackend() || !SESI || ['pengawas', 'dinas'].indexOf(SESI.peran) === -1) {
+    $('layarMuat').innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:44px">🔐</div>' +
+      '<p><b>Silakan masuk sebagai Pengawas.</b></p>' +
+      '<a class="btn" href="' + PANDAI.akar() + 'index.html">Ke halaman masuk</a></div>';
+    throw new Error('blokir');
+  }
+  $('namaSaya').textContent = SESI.nama;
+  $('avatar').textContent = (SESI.nama || 'PW').split(' ').map(function (k) { return k[0]; }).slice(0, 2).join('').toUpperCase();
+})();
+
+var toastTimer;
+function toast(p) { var t = $('toast'); t.textContent = p; t.classList.add('aktif');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('aktif'); }, 3200); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+function muat() {
+  $('layarMuat').style.display = 'flex';
+  PANDAI.api('paket.list', {}).then(function (r) {
+    PAKET = r; gambar(); $('layarMuat').style.display = 'none';
+  }).catch(function (err) { $('pesanMuat').textContent = '⚠ ' + err.message; });
+}
+
+var LP = { telaah: ['Menunggu telaah 🔍', 'c-kuning'], disetujui: ['Disetujui ✅', 'c-biru'], terbit: ['TERBIT 📢', 'c-hijau'] };
+function gambar() {
+  $('detailPaket').style.display = 'none'; $('daftarPaket').style.display = 'block';
+  var w = $('daftarPaket'); w.innerHTML = '';
+  var data = PAKET.filter(function (p) { return p.status === filterAktif; });
+  if (!data.length) { w.innerHTML = '<p class="kosong">Tidak ada paket berstatus ini.</p>'; return; }
+  data.forEach(function (p) {
+    var l = LP[p.status] || [p.status, 'c-abu'];
+    var div = document.createElement('div'); div.className = 'soal-item';
+    div.innerHTML = '<div class="atas"><span class="chip ' + l[1] + '">' + l[0] + '</span>' +
+      '<span class="chip c-abu">' + p.kategoriBank + ' · ' + p.jumlahButir + ' butir</span>' +
+      '<span style="font-size:11px;color:#8a93a6;margin-left:auto">' + p.paketId + '</span></div>' +
+      '<p><b>' + esc(p.nama) + '</b><br><span style="font-size:11.5px;color:#6b7690">Pembuat: ' + p.dibuatOleh + '</span></p>' +
+      '<button class="btn btn-mini" onclick="bukaDetail(\'' + p.paketId + '\')">🔍 Buka & telaah</button>';
+    w.appendChild(div);
+  });
+}
+$('filterStatus').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#filterStatus button').forEach(function (x) { x.classList.remove('aktif'); });
+  b.classList.add('aktif'); filterAktif = b.dataset.f; gambar();
+});
+
+function bukaDetail(paketId) {
+  $('layarMuat').style.display = 'flex'; $('pesanMuat').textContent = 'Memuat paket…';
+  PANDAI.api('paket.detail', { paketId: paketId }).then(function (d) {
+    $('layarMuat').style.display = 'none';
+    var p = d.paket, html = '';
+    html += '<div class="kartu"><button class="btn btn-mini" onclick="gambar()">← Kembali</button>' +
+      '<h3 style="margin:10px 0 4px">' + esc(p.nama) + '</h3>' +
+      '<span class="chip c-abu">' + p.kategoriBank + ' · kelas ' + p.kelas + ' · ' + p.durasiMenit + ' menit · ' + d.soal.length + ' butir</span></div>';
+    var stimulusDitampilkan = {};
+    d.soal.forEach(function (s) {
+      var kunciTeks = '';
+      if (s.bentuk === 'PG') kunciTeks = 'Kunci: ' + 'ABCD'[s.kunci];
+      else if (s.bentuk === 'PGK_MCMA') kunciTeks = 'Kunci: pernyataan ' + (s.kunci || []).map(function (i) { return i + 1; }).join(' & ');
+      else if (s.bentuk === 'PGK_KATEGORI') kunciTeks = 'Kunci: ' + (s.kunci || []).join(', ') + ' (B = kategori pertama)';
+      else kunciTeks = 'Kunci: ' + (Array.isArray(s.kunci) ? s.kunci.join(' / ') : s.kunci);
+
+      var stimulusHtml = '';
+      if (s.stimulusId && d.stimulus[s.stimulusId] && !stimulusDitampilkan[s.stimulusId]) {
+        stimulusDitampilkan[s.stimulusId] = true;
+        stimulusHtml = '<div class="stimulus-box"><b>📖 ' + esc(d.stimulus[s.stimulusId].judul) + '</b>\n' + esc(d.stimulus[s.stimulusId].konten) + '</div>';
+      }
+      var opsiHtml = '';
+      if (s.bentuk === 'PG' || s.bentuk === 'PGK_MCMA') {
+        opsiHtml = (s.opsi || []).map(function (o, i) {
+          return '<div style="font-size:13px;margin:2px 0">' + (s.bentuk === 'PG' ? 'ABCD'[i] + '. ' : '• ') + esc(o) + '</div>';
+        }).join('');
+      } else if (s.bentuk === 'PGK_KATEGORI' && s.opsi) {
+        opsiHtml = '<div style="font-size:12px;color:#6b7690">Kategori: ' + s.opsi.kategori.join(' / ') + '</div>' +
+          s.opsi.pernyataan.map(function (o) { return '<div style="font-size:13px;margin:2px 0">• ' + esc(o) + '</div>'; }).join('');
+      }
+      html += '<div class="soal-item">' + stimulusHtml +
+        '<div class="atas"><span class="chip c-biru">No. ' + s.nomor + ' · ' + s.bentuk + '</span>' +
+        '<span class="chip c-abu">' + (s.levelKognitif || '') + '</span></div>' +
+        '<p><b>' + esc(s.pertanyaan) + '</b></p>' + opsiHtml +
+        '<div class="kunci-baris">🔑 ' + esc(kunciTeks) + (s.pembahasan ? ' — 💡 ' + esc(String(s.pembahasan).slice(0, 120)) : '') + '</div></div>';
+    });
+
+    if (p.status === 'telaah') {
+      html += '<div class="kartu"><b>Hasil telaah</b>' +
+        '<textarea id="catatanTelaah" placeholder="Catatan untuk pembuat soal (wajib bila mengembalikan revisi)…"></textarea>' +
+        '<div style="display:flex;gap:8px;margin-top:10px">' +
+        '<button class="btn btn-koral" style="flex:1" onclick="kirimTelaah(\'' + p.paketId + '\',\'revisi\')">↩ Kembalikan (revisi)</button>' +
+        '<button class="btn btn-hijau" style="flex:1" onclick="kirimTelaah(\'' + p.paketId + '\',\'setuju\')">✅ Setujui paket</button></div>' +
+        '<p class="kosong" style="font-size:11.5px;margin-bottom:0">Menyetujui paket = menyetujui seluruh butirnya. Setelah disetujui, dinas yang menerbitkan.</p></div>';
+    }
+    $('daftarPaket').style.display = 'none';
+    $('detailPaket').style.display = 'block';
+    $('detailPaket').innerHTML = html;
+    window.scrollTo({ top: 0 });
+  }).catch(function (err) { $('layarMuat').style.display = 'none'; toast('⚠ ' + err.message); });
+}
+
+function kirimTelaah(paketId, hasil) {
+  var catatan = ($('catatanTelaah') ? $('catatanTelaah').value.trim() : '');
+  if (hasil === 'revisi' && !catatan) { toast('⚠ Tulis catatan revisi untuk pembuat soal'); return; }
+  $('layarMuat').style.display = 'flex'; $('pesanMuat').textContent = 'Mengirim hasil telaah…';
+  PANDAI.api('pengawas.paket.telaah', { paketId: paketId, hasil: hasil, catatan: catatan }).then(function (r) {
+    toast(hasil === 'setuju' ? '✅ Paket disetujui — menunggu penerbitan dinas' : '↩ Dikembalikan ke pembuat soal');
+    muat();
+  }).catch(function (err) { $('layarMuat').style.display = 'none'; toast('⚠ ' + err.message); });
+}
+
+muat();
+</script>
+</body>
+</html>

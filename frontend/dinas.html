@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FFC53D">
+<title>PANDAI — Dashboard Dinas</title>
+<style>
+:root{
+  --kuning:#FFC53D; --biru:#4DA3FF; --koral:#FF7A59; --hijau:#3EC486;
+  --tinta:#2B3A55; --krem:#FFF8EC; --putih:#FFF;
+  --garis:rgba(255,197,61,.16); --radius:16px; --bayang:0 3px 0 rgba(43,58,85,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;color:var(--tinta);font-size:14.5px;
+  background:repeating-linear-gradient(to bottom, transparent 0 31px, var(--garis) 31px 32px),var(--krem);
+  padding-bottom:40px;}
+.app{max-width:640px;margin:0 auto;padding:10px 12px;}
+h2.judul-hal{font-size:20px;margin:10px 2px 12px;}
+h2.judul-hal small{font-weight:400;font-size:12.5px;color:#6b7690;display:block;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--putih);border-bottom:2px solid rgba(43,58,85,.12);
+  padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--kuning);color:var(--tinta);display:flex;
+  align-items:center;justify-content:center;font-weight:800;border:2px solid var(--tinta);flex:none;}
+.topbar .ident{flex:1;line-height:1.25;}
+.topbar .ident b{font-size:15px;}
+.topbar .ident span{font-size:11.5px;color:#6b7690;display:block;}
+.kartu{background:var(--putih);border:2px solid rgba(43,58,85,.12);border-radius:var(--radius);
+  box-shadow:var(--bayang);padding:14px;margin-bottom:12px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:13.5px;
+  font-weight:700;color:var(--tinta);background:var(--putih);border:2px solid var(--tinta);border-radius:999px;
+  padding:8px 14px;min-height:38px;cursor:pointer;box-shadow:0 2px 0 var(--tinta);user-select:none;}
+.btn:active{transform:translateY(2px);box-shadow:0 0 0 var(--tinta);}
+.btn-hijau{background:var(--hijau);color:#fff;border-color:#238b60;box-shadow:0 2px 0 #238b60;}
+.btn-mini{font-size:12px;padding:5px 10px;min-height:30px;}
+.chip{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;
+  border:1.5px solid transparent;white-space:nowrap;}
+.c-biru{background:#E3F1FF;color:#1D6FCC;border-color:#9CCBFF;}
+.c-hijau{background:#E7FAF1;color:#1B8A5B;border-color:#9FE3C4;}
+.c-kuning{background:#FFF3D4;color:#9A6B00;border-color:#FFD98A;}
+.c-koral{background:#FFEAE3;color:#C2431F;border-color:#FFB49C;}
+.c-abu{background:#EEF0F4;color:#5B6779;border-color:#C9D0DB;}
+.filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.filter button{font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
+  border:2px solid rgba(43,58,85,.25);background:#fff;color:var(--tinta);border-radius:999px;padding:6px 12px;}
+.filter button.aktif{background:var(--tinta);color:#fff;border-color:var(--tinta);}
+.soal-item{border:2px solid rgba(43,58,85,.12);border-radius:14px;padding:11px 12px;margin-bottom:9px;background:#FFFDF5;}
+.soal-item .atas{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;align-items:center;}
+.soal-item p{margin:4px 0 8px;font-size:13.5px;line-height:1.5;}
+.grid-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.stat{background:var(--putih);border:2px solid rgba(43,58,85,.12);border-radius:14px;box-shadow:var(--bayang);
+  padding:10px 6px;text-align:center;}
+.stat b{font-size:20px;display:block;line-height:1.1;}
+.stat span{font-size:10.5px;color:#6b7690;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;background:var(--tinta);
+  color:#fff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:999px;opacity:0;
+  pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center;}
+.toast.aktif{opacity:1;}
+.kosong{color:#8a93a6;font-size:13px;text-align:center;padding:14px 0;}
+.muat{position:fixed;inset:0;z-index:200;background:rgba(255,248,236,.9);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;font-weight:800;}
+.muat .putar{width:44px;height:44px;border-radius:50%;border:5px solid rgba(43,58,85,.15);
+  border-top-color:var(--kuning);animation:putar .8s linear infinite;}
+@keyframes putar{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="muat" id="layarMuat"><div class="putar"></div><div id="pesanMuat">Memuat data…</div></div>
+
+<header class="topbar">
+  <div class="avatar" id="avatar">DN</div>
+  <div class="ident"><b id="namaSaya">…</b><span>Dinas Pendidikan — penerbitan paket & pengelolaan</span></div>
+  <button class="btn btn-mini" onclick="PANDAI.keluar()">Keluar</button>
+</header>
+
+<div class="app">
+  <h2 class="judul-hal">🏛 Bank Paket Kabupaten<small>Terbitkan paket yang telah disetujui pengawas agar dapat dipakai seluruh sekolah</small></h2>
+
+  <div class="grid-stat" id="statPaket"></div>
+
+  <div class="filter" id="filterStatus">
+    <button class="aktif" data-f="disetujui">Siap terbit ✅</button>
+    <button data-f="telaah">Sedang ditelaah</button>
+    <button data-f="terbit">Terbit 📢</button>
+    <button data-f="draf">Draf</button>
+    <button data-f="revisi">Revisi</button>
+  </div>
+
+  <div id="daftarPaket"><p class="kosong">Memuat…</p></div>
+
+  <div class="kartu">
+    <b>🏫 Sekolah terdaftar</b>
+    <div id="daftarSekolah" style="margin-top:8px;font-size:13px"><p class="kosong">Memuat…</p></div>
+    <p class="kosong" style="font-size:11.5px;margin-bottom:0">Pengelolaan sekolah, akun, dan referensi CP/TP lengkap menyusul pada tahap M5 — sementara lewat spreadsheet master.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var SESI = PANDAI.sesi();
+var PAKET = [], filterAktif = 'disetujui';
+
+(function () {
+  if (!PANDAI.adaBackend() || !SESI || SESI.peran !== 'dinas') {
+    $('layarMuat').innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:44px">🔐</div>' +
+      '<p><b>Silakan masuk sebagai Dinas.</b></p>' +
+      '<a class="btn" href="' + PANDAI.akar() + 'index.html">Ke halaman masuk</a></div>';
+    throw new Error('blokir');
+  }
+  $('namaSaya').textContent = SESI.nama;
+})();
+
+var toastTimer;
+function toast(p) { var t = $('toast'); t.textContent = p; t.classList.add('aktif');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('aktif'); }, 3200); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+function muat() {
+  $('layarMuat').style.display = 'flex';
+  Promise.all([
+    PANDAI.api('paket.list', {}),
+    PANDAI.api('dinas.sekolah.list', {}).catch(function () { return []; })
+  ]).then(function (r) {
+    PAKET = r[0];
+    gambarStat(); gambar(); gambarSekolah(r[1]);
+    $('layarMuat').style.display = 'none';
+  }).catch(function (err) { $('pesanMuat').textContent = '⚠ ' + err.message; });
+}
+
+function gambarStat() {
+  var n = function (s) { return PAKET.filter(function (p) { return p.status === s; }).length; };
+  $('statPaket').innerHTML =
+    '<div class="stat"><b>' + n('telaah') + '</b><span>Ditelaah</span></div>' +
+    '<div class="stat"><b>' + n('disetujui') + '</b><span>Siap terbit</span></div>' +
+    '<div class="stat"><b>' + n('terbit') + '</b><span>Terbit</span></div>' +
+    '<div class="stat"><b>' + PAKET.length + '</b><span>Total paket</span></div>';
+}
+
+var LP = { draf: ['Draf', 'c-abu'], telaah: ['Telaah pengawas 🔍', 'c-kuning'], revisi: ['Revisi ✍️', 'c-koral'],
+  disetujui: ['Disetujui ✅', 'c-biru'], terbit: ['TERBIT 📢', 'c-hijau'] };
+function gambar() {
+  var w = $('daftarPaket'); w.innerHTML = '';
+  var data = PAKET.filter(function (p) { return p.status === filterAktif; });
+  if (!data.length) { w.innerHTML = '<p class="kosong">Tidak ada paket berstatus ini.</p>'; return; }
+  data.forEach(function (p) {
+    var l = LP[p.status] || [p.status, 'c-abu'];
+    var div = document.createElement('div'); div.className = 'soal-item';
+    div.innerHTML = '<div class="atas"><span class="chip ' + l[1] + '">' + l[0] + '</span>' +
+      '<span class="chip c-abu">' + p.kategoriBank + ' · ' + p.jumlahButir + ' butir · kls ' + p.kelas + '</span>' +
+      '<span style="font-size:11px;color:#8a93a6;margin-left:auto">' + p.paketId + '</span></div>' +
+      '<p><b>' + esc(p.nama) + '</b><br><span style="font-size:11.5px;color:#6b7690">Pembuat: ' + p.dibuatOleh +
+      (p.ditelaahOleh ? ' · Penelaah: ' + p.ditelaahOleh : '') + '</span></p>' +
+      (p.status === 'disetujui'
+        ? '<button class="btn btn-mini btn-hijau" onclick="terbitkan(\'' + p.paketId + '\')">📢 Terbitkan ke seluruh sekolah</button>'
+        : '');
+    w.appendChild(div);
+  });
+}
+$('filterStatus').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#filterStatus button').forEach(function (x) { x.classList.remove('aktif'); });
+  b.classList.add('aktif'); filterAktif = b.dataset.f; gambar();
+});
+
+function terbitkan(paketId) {
+  if (!confirm('Terbitkan ' + paketId + '? Paket akan terlihat oleh guru di SELURUH sekolah.')) return;
+  $('layarMuat').style.display = 'flex'; $('pesanMuat').textContent = 'Menerbitkan…';
+  PANDAI.api('dinas.paket.terbit', { paketId: paketId }).then(function () {
+    toast('📢 Paket terbit — kini tampil di dashboard guru'); muat();
+  }).catch(function (err) { $('layarMuat').style.display = 'none'; toast('⚠ ' + err.message); });
+}
+
+function gambarSekolah(sek) {
+  $('daftarSekolah').innerHTML = sek.length
+    ? sek.map(function (s) { return '• <b>' + s.kode + '</b> — ' + esc(s.nama) + (s.kecamatan ? ' (' + esc(s.kecamatan) + ')' : ''); }).join('<br>')
+    : '<p class="kosong">Belum ada sekolah.</p>';
+}
+
+muat();
+</script>
+</body>
+</html>
