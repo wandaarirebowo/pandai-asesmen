@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FFC53D">
+<title>PANDAI — Masuk</title>
+<style>
+/* PANDAI "buku tulis & stiker" — halaman masuk */
+:root{
+  --kuning:#FFC53D; --biru:#4DA3FF; --koral:#FF7A59; --hijau:#3EC486;
+  --tinta:#2B3A55; --krem:#FFF8EC; --putih:#FFF;
+  --garis:rgba(77,163,255,.14); --radius:18px; --bayang:0 3px 0 rgba(43,58,85,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;color:var(--tinta);
+  background:repeating-linear-gradient(to bottom, transparent 0 27px, var(--garis) 27px 28px),var(--krem);
+  min-height:100vh;
+}
+.app{max-width:440px;margin:0 auto;padding:16px 14px 40px;}
+.tengah{text-align:center;}
+.maskot{width:96px;height:96px;margin:14px auto 4px;display:block;}
+.judul-app{font-size:34px;font-weight:900;letter-spacing:1px;margin:2px 0;}
+.judul-app .aksen{color:var(--koral);}
+.stiker{display:inline-block;background:var(--kuning);border:2px solid var(--tinta);border-radius:12px;
+  padding:4px 12px;font-weight:800;font-size:11.5px;transform:rotate(-2deg);box-shadow:var(--bayang);max-width:92%;}
+.kartu{background:var(--putih);border:2px solid rgba(43,58,85,.12);border-radius:var(--radius);
+  box-shadow:var(--bayang);padding:18px;margin-top:18px;}
+label{display:block;font-size:12px;font-weight:800;margin:12px 0 4px;}
+input,select{width:100%;font-family:inherit;font-size:16px;color:var(--tinta);
+  border:2px solid rgba(43,58,85,.25);border-radius:12px;padding:12px;background:#FFFDF5;}
+input:focus{outline:none;border-color:var(--biru);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  font-family:inherit;font-size:17px;font-weight:800;color:var(--tinta);background:var(--kuning);
+  border:2px solid var(--tinta);border-radius:999px;padding:13px;min-height:50px;cursor:pointer;
+  box-shadow:0 3px 0 var(--tinta);transition:transform .06s;margin-top:18px;}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--tinta);}
+.btn[disabled]{opacity:.5;pointer-events:none;}
+.saklar{display:flex;gap:8px;margin-top:6px;}
+.saklar button{flex:1;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;
+  border:2px solid rgba(43,58,85,.3);background:#fff;color:var(--tinta);border-radius:999px;padding:10px;}
+.saklar button.aktif{background:var(--tinta);color:#fff;border-color:var(--tinta);}
+.galat{display:none;background:#FFEAE3;border:2px dashed #C2431F;color:#C2431F;
+  border-radius:12px;padding:10px 12px;font-size:13px;font-weight:700;margin-top:14px;}
+.galat.aktif{display:block;}
+.banner-demo{background:#E3F1FF;border:2px dashed #1D6FCC;color:#1D6FCC;border-radius:12px;
+  padding:10px 12px;font-size:12.5px;margin-top:16px;line-height:1.55;}
+.banner-demo b{display:block;margin-bottom:2px;}
+.tautan-demo{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.tautan-demo a{font-size:12px;font-weight:800;color:var(--tinta);background:#fff;
+  border:2px solid var(--tinta);border-radius:999px;padding:6px 12px;text-decoration:none;box-shadow:0 2px 0 var(--tinta);}
+.kaki{font-size:11.5px;color:#8a93a6;margin-top:22px;}
+.badge-draft{position:fixed;top:0;right:0;z-index:100;background:var(--tinta);color:#fff;
+  font-size:10px;font-weight:700;padding:3px 10px;border-radius:0 0 0 10px;opacity:.85;}
+</style>
+</head>
+<body>
+<div class="badge-draft" id="badgeVersi">M1</div>
+<div class="app tengah">
+
+  <svg class="maskot" viewBox="0 0 120 120" aria-label="Maskot PANDAI">
+    <circle cx="60" cy="64" r="44" fill="#4DA3FF" stroke="#2B3A55" stroke-width="3"/>
+    <circle cx="60" cy="72" r="30" fill="#FFF8EC" stroke="#2B3A55" stroke-width="2.5"/>
+    <circle cx="45" cy="52" r="14" fill="#fff" stroke="#2B3A55" stroke-width="3"/>
+    <circle cx="75" cy="52" r="14" fill="#fff" stroke="#2B3A55" stroke-width="3"/>
+    <circle cx="45" cy="52" r="6" fill="#2B3A55"/><circle cx="75" cy="52" r="6" fill="#2B3A55"/>
+    <polygon points="60,60 53,70 67,70" fill="#FFC53D" stroke="#2B3A55" stroke-width="2.5"/>
+    <path d="M30 30 L45 40 M90 30 L75 40" stroke="#2B3A55" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  <h1 class="judul-app">PAN<span class="aksen">DAI</span></h1>
+  <span class="stiker">Platform Asesmen Nasional Digital Anak Indonesia</span>
+
+  <div class="kartu" style="text-align:left">
+    <div class="saklar">
+      <button id="modeGuru" class="aktif" type="button">👩‍🏫 Guru / Petugas</button>
+      <button id="modeSiswa" type="button">🧒 Siswa</button>
+    </div>
+
+    <div id="wadahSekolah" style="display:none">
+      <label>Kode sekolah</label>
+      <input id="inpSekolah" placeholder="contoh: SDN01" autocomplete="off" style="text-transform:uppercase">
+    </div>
+
+    <label>Username</label>
+    <input id="inpUser" placeholder="username" autocomplete="username">
+
+    <label>Kata sandi</label>
+    <input id="inpSandi" type="password" placeholder="••••••" autocomplete="current-password">
+
+    <div class="galat" id="galat"></div>
+    <button class="btn" id="btnMasuk" type="button">🚀 &nbsp;Masuk</button>
+
+    <div class="banner-demo" id="bannerDemo" style="display:none">
+      <b>⚙️ Mode demo — backend belum dikonfigurasi</b>
+      Isi <code>APPS_SCRIPT_URL</code> pada <code>config.js</code> setelah deploy backend
+      (lihat README). Sementara itu Anda dapat menjelajah draf antarmuka:
+      <div class="tautan-demo">
+        <a href="frontend/ujian.html">🧒 Ujian siswa</a>
+        <a href="frontend/guru.html">👩‍🏫 Guru</a>
+        <a href="frontend/pembuat-soal.html">✍️ Pembuat soal</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="kaki" id="kaki">PANDAI · [Dinas Pendidikan Kabupaten/Kota]</p>
+</div>
+
+<script src="config.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var siswa = false;
+
+  $('kaki').textContent = 'PANDAI · ' + (window.PANDAI_CONFIG.NAMA_DINAS || '');
+  $('badgeVersi').textContent = 'v' + (window.PANDAI_CONFIG.VERSI || '');
+  if (!PANDAI.adaBackend()) $('bannerDemo').style.display = 'block';
+
+  function setMode(m) {
+    siswa = m;
+    $('modeSiswa').classList.toggle('aktif', m);
+    $('modeGuru').classList.toggle('aktif', !m);
+    $('wadahSekolah').style.display = m ? 'block' : 'none';
+  }
+  $('modeGuru').addEventListener('click', function () { setMode(false); });
+  $('modeSiswa').addEventListener('click', function () { setMode(true); });
+
+  function tampilGalat(p) { var g = $('galat'); g.textContent = p; g.classList.add('aktif'); }
+
+  var TUJUAN = {
+    siswa: 'frontend/ujian.html', guru: 'frontend/guru.html', pembuat: 'frontend/pembuat-soal.html',
+    kepsek: 'frontend/guru.html', pengawas: 'frontend/guru.html', dinas: 'frontend/guru.html'
+    // dashboard khusus kepsek/pengawas/dinas menyusul (Tugas #5) — sementara diarahkan ke tampilan guru
+  };
+
+  $('btnMasuk').addEventListener('click', function () {
+    $('galat').classList.remove('aktif');
+    var data = {
+      username: $('inpUser').value.trim(),
+      password: $('inpSandi').value
+    };
+    if (siswa) data.kodeSekolah = $('inpSekolah').value.trim().toUpperCase();
+    if (!data.username || !data.password) { tampilGalat('Isi username dan kata sandi.'); return; }
+    if (siswa && !data.kodeSekolah) { tampilGalat('Isi kode sekolah (tertera pada kartu ujianmu).'); return; }
+    if (!PANDAI.adaBackend()) { tampilGalat('Backend belum dikonfigurasi — gunakan tautan draf di bawah untuk menjelajah.'); return; }
+
+    $('btnMasuk').disabled = true; $('btnMasuk').textContent = '⏳ Memeriksa…';
+    PANDAI.api('auth.login', data).then(function (s) {
+      PANDAI.simpanSesi(s);
+      location.href = TUJUAN[s.peran] || 'frontend/guru.html';
+    }).catch(function (err) {
+      tampilGalat(String(err.message || err).replace('MODE_DEMO: ', ''));
+      $('btnMasuk').disabled = false; $('btnMasuk').textContent = '🚀  Masuk';
+    });
+  });
+
+  $('inpSandi').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btnMasuk').click(); });
+})();
+</script>
+</body>
+</html>
