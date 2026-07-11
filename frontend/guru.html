@@ -534,7 +534,7 @@ function gambarJadwal() {
       '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
       '<button class="btn btn-mini btn-biru" onclick="pilihMonitor(\'' + j.jadwalId + '\')">🖥 Pantau</button>' +
       '<button class="btn btn-mini" onclick="pilihLaporan(\'' + j.jadwalId + '\')">📊 Laporan</button>' +
-      (j.mode === 'offline' ? '<span class="chip c-abu">🖨 cetak naskah & LJK — M6</span>' : '') + '</div>';
+      (j.mode === 'offline' ? '<a class="btn btn-mini btn-koral" href="omr.html?jadwal=' + j.jadwalId + '">🖨 Cetak & Pindai (OMR)</a>' : '') + '</div>';
     w.appendChild(div);
   });
 }

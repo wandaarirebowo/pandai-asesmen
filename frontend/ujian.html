@@ -406,11 +406,12 @@ function gambarJadwal() {
   });
 }
 
-// ---------- pra-unduh H-1 ----------
+// ---------- pra-unduh H-1 (paket disimpan TERENKRIPSI di perangkat) ----------
 function praUnduh(jadwalId) {
   muatTampil('Mengunduh paket soal…\nSoal tersimpan terkunci sampai hari ujian.');
   PANDAI.api('siswa.paket.get', { jadwalId: jadwalId, praUnduh: true }).then(function (p) {
-    localStorage.setItem(kunciPaket(jadwalId), JSON.stringify(p));
+    return PANDAI.simpanTerenkripsi(kunciPaket(jadwalId), p);
+  }).then(function () {
     muatSembunyi(); toast('✔ Paket siap! Besok tinggal masukkan token dari gurumu.', 4200);
     gambarJadwal();
   }).catch(function (err) { muatSembunyi(); toast('⚠ ' + err.message); });
@@ -430,35 +431,31 @@ function mulaiUjian() {
   var token = $('inpToken').value.trim().toUpperCase();
   if (token.length < 6) { $('inpToken').style.borderColor = '#FF7A59'; return; }
   var jid = jadwalDipilih.jadwalId;
-  var cache = null;
-  try { cache = JSON.parse(localStorage.getItem(kunciPaket(jid)) || 'null'); } catch (e) {}
 
   $('btnMulaiUjian').disabled = true;
-  muatTampil(cache ? 'Memeriksa token…' : 'Memeriksa token & mengunduh paket…');
-  PANDAI.api('siswa.paket.get', { jadwalId: jid, token: token, tanpaSoal: !!cache })
-    .then(function (resp) {
-      var payload;
-      if (resp.soal && resp.soal.length) payload = resp;            // server mengirim penuh
-      else if (cache && cache.paket && cache.paket.paketId === resp.paket.paketId) {
-        payload = cache; payload.jadwal = resp.jadwal; payload.waktuServer = resp.waktuServer;
-      } else {                                                       // cache usang → unduh penuh
-        return PANDAI.api('siswa.paket.get', { jadwalId: jid, token: token }).then(function (penuh) { return penuh; });
-      }
-      return payload;
-    })
-    .then(function (payload) {
-      localStorage.setItem(kunciPaket(jid), JSON.stringify(payload));
-      tokenTersimpan = token;
+  muatTampil('Memeriksa token…');
+  PANDAI.bacaTerenkripsi(kunciPaket(jid)).then(function (cache) {
+    return PANDAI.api('siswa.paket.get', { jadwalId: jid, token: token, tanpaSoal: !!cache })
+      .then(function (resp) {
+        if (resp.soal && resp.soal.length) return resp;               // server mengirim penuh
+        if (cache && cache.paket && cache.paket.paketId === resp.paket.paketId) {
+          cache.jadwal = resp.jadwal; cache.waktuServer = resp.waktuServer; // segarkan info sesi
+          return cache;
+        }
+        return PANDAI.api('siswa.paket.get', { jadwalId: jid, token: token }); // cache usang → unduh penuh
+      });
+  }).then(function (payload) {
+    tokenTersimpan = token;
+    return PANDAI.simpanTerenkripsi(kunciPaket(jid), payload).then(function () {
       $('ovToken').classList.remove('aktif');
       siapkanUjian(jadwalDipilih, payload);
-    })
-    .catch(function (err) {
-      muatSembunyi();
-      var pesan = String(err.message || err);
-      if (pesan.indexOf('TERKUNCI') !== -1) { $('ovToken').classList.remove('aktif'); tampilKunci(); return; }
-      $('galatToken').textContent = '⚠ ' + pesan; $('galatToken').style.display = 'block';
-    })
-    .finally(function () { $('btnMulaiUjian').disabled = false; });
+    });
+  }).catch(function (err) {
+    muatSembunyi();
+    var pesan = String(err.message || err);
+    if (pesan.indexOf('TERKUNCI') !== -1) { $('ovToken').classList.remove('aktif'); tampilKunci(); return; }
+    $('galatToken').textContent = '⚠ ' + pesan; $('galatToken').style.display = 'block';
+  }).finally(function () { $('btnMulaiUjian').disabled = false; });
 }
 
 // ---------- penyiapan soal (pengacakan seed deterministik — PRD 5.2) ----------

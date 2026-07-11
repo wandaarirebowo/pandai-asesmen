@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FFC53D">
+<title>PANDAI — Dashboard Kepala Sekolah</title>
+<style>
+:root{
+  --kuning:#FFC53D; --biru:#4DA3FF; --koral:#FF7A59; --hijau:#3EC486;
+  --tinta:#2B3A55; --krem:#FFF8EC; --putih:#FFF;
+  --garis:rgba(62,196,134,.10); --radius:16px; --bayang:0 3px 0 rgba(43,58,85,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;color:var(--tinta);font-size:14.5px;
+  background:repeating-linear-gradient(to bottom, transparent 0 31px, var(--garis) 31px 32px),var(--krem);
+  padding-bottom:86px;}
+.app{max-width:640px;margin:0 auto;padding:10px 12px;}
+h2.judul-hal{font-size:20px;margin:10px 2px 12px;}
+h2.judul-hal small{font-weight:400;font-size:12.5px;color:#6b7690;display:block;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--putih);border-bottom:2px solid rgba(43,58,85,.12);
+  padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--hijau);color:#fff;display:flex;
+  align-items:center;justify-content:center;font-weight:800;border:2px solid var(--tinta);flex:none;}
+.topbar .ident{flex:1;line-height:1.25;}
+.topbar .ident b{font-size:15px;}
+.topbar .ident span{font-size:11.5px;color:#6b7690;display:block;}
+.kartu{background:var(--putih);border:2px solid rgba(43,58,85,.12);border-radius:var(--radius);
+  box-shadow:var(--bayang);padding:14px;margin-bottom:12px;}
+.kartu h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:13.5px;
+  font-weight:700;color:var(--tinta);background:var(--putih);border:2px solid var(--tinta);border-radius:999px;
+  padding:8px 14px;min-height:38px;cursor:pointer;box-shadow:0 2px 0 var(--tinta);user-select:none;}
+.btn:active{transform:translateY(2px);box-shadow:0 0 0 var(--tinta);}
+.btn-utama{background:var(--kuning);}
+.btn-biru{background:var(--biru);color:#fff;border-color:#2b6cb0;box-shadow:0 2px 0 #2b6cb0;}
+.btn-hijau{background:var(--hijau);color:#fff;border-color:#238b60;box-shadow:0 2px 0 #238b60;}
+.btn-mini{font-size:12px;padding:5px 10px;min-height:30px;}
+.btn[disabled]{opacity:.5;pointer-events:none;}
+.chip{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;
+  border:1.5px solid transparent;white-space:nowrap;}
+.c-biru{background:#E3F1FF;color:#1D6FCC;border-color:#9CCBFF;}
+.c-hijau{background:#E7FAF1;color:#1B8A5B;border-color:#9FE3C4;}
+.c-kuning{background:#FFF3D4;color:#9A6B00;border-color:#FFD98A;}
+.c-koral{background:#FFEAE3;color:#C2431F;border-color:#FFB49C;}
+.c-abu{background:#EEF0F4;color:#5B6779;border-color:#C9D0DB;}
+.halaman{display:none;}
+.halaman.aktif{display:block;}
+.nav-bawah{position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--putih);
+  border-top:2px solid rgba(43,58,85,.15);display:flex;justify-content:space-around;padding:6px 4px 10px;}
+.nav-bawah button{border:none;background:none;font-family:inherit;cursor:pointer;display:flex;
+  flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:700;color:#8a93a6;width:84px;}
+.nav-bawah button .iko{font-size:20px;line-height:1;padding:5px 12px;border-radius:12px;}
+.nav-bawah button.aktif{color:var(--tinta);}
+.nav-bawah button.aktif .iko{background:var(--kuning);border:2px solid var(--tinta);}
+.grid-stat{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.stat{background:var(--putih);border:2px solid rgba(43,58,85,.12);border-radius:14px;box-shadow:var(--bayang);
+  padding:10px 6px;text-align:center;}
+.stat b{font-size:20px;display:block;line-height:1.1;}
+.stat span{font-size:10.5px;color:#6b7690;}
+.tabel{width:100%;border-collapse:collapse;font-size:13px;}
+.tabel th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#6b7690;
+  padding:6px 8px;border-bottom:2px solid rgba(43,58,85,.15);}
+.tabel td{padding:8px;border-bottom:1.5px dashed rgba(43,58,85,.12);vertical-align:middle;}
+.tabel tr:last-child td{border-bottom:none;}
+.gulir-x{overflow-x:auto;}
+.soal-item{border:2px solid rgba(43,58,85,.12);border-radius:14px;padding:11px 12px;margin-bottom:9px;background:#FFFDF5;}
+.soal-item .atas{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;align-items:center;}
+.soal-item p{margin:4px 0 8px;font-size:13.5px;line-height:1.5;}
+.form label{display:block;font-size:12px;font-weight:800;margin:10px 0 4px;}
+.form input,.form select{width:100%;font-family:inherit;font-size:14px;color:var(--tinta);
+  border:2px solid rgba(43,58,85,.25);border-radius:10px;padding:9px 10px;background:#fff;}
+.tirai{position:fixed;inset:0;background:rgba(43,58,85,.55);z-index:80;display:none;align-items:flex-end;justify-content:center;}
+.tirai.aktif{display:flex;}
+.modal{background:var(--krem);border-radius:22px 22px 0 0;width:100%;max-width:640px;max-height:90vh;
+  overflow:auto;padding:16px;border-top:3px solid var(--tinta);}
+.modal h3{margin:2px 0 12px;}
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:100;background:var(--tinta);
+  color:#fff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:999px;opacity:0;
+  pointer-events:none;transition:opacity .2s;max-width:90%;text-align:center;}
+.toast.aktif{opacity:1;}
+.kosong{color:#8a93a6;font-size:13px;text-align:center;padding:14px 0;}
+.muat{position:fixed;inset:0;z-index:200;background:rgba(255,248,236,.9);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;font-weight:800;padding:20px;text-align:center;}
+.muat .putar{width:44px;height:44px;border-radius:50%;border:5px solid rgba(43,58,85,.15);
+  border-top-color:var(--hijau);animation:putar .8s linear infinite;}
+@keyframes putar{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="muat" id="layarMuat"><div class="putar"></div><div id="pesanMuat">Memuat data…</div></div>
+
+<header class="topbar">
+  <div class="avatar" id="avatar">KS</div>
+  <div class="ident"><b id="namaSaya">…</b><span id="subKepsek">Kepala Sekolah</span></div>
+  <button class="btn btn-mini" onclick="PANDAI.keluar()">Keluar</button>
+</header>
+
+<div class="app">
+
+<!-- ============================ RINGKASAN ============================ -->
+<section class="halaman aktif" id="hal-ringkas">
+  <h2 class="judul-hal">🏫 Ringkasan Sekolah<small id="subRingkas">Pantauan satu sekolah</small></h2>
+  <div class="grid-stat">
+    <div class="stat"><b id="stGuru">–</b><span>Guru</span></div>
+    <div class="stat"><b id="stSiswa">–</b><span>Siswa</span></div>
+    <div class="stat"><b id="stRombel">–</b><span>Rombel</span></div>
+    <div class="stat"><b id="stJadwal">–</b><span>Kegiatan</span></div>
+  </div>
+  <div class="kartu" id="kartuTerdekat" style="display:none"></div>
+  <div class="kartu">
+    <h3>⚡ Aksi cepat</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-mini btn-utama" onclick="keHal('hal-guru')">👩‍🏫 Kelola guru</button>
+      <button class="btn btn-mini btn-biru" onclick="keHal('hal-kegiatan')">📊 Kegiatan & laporan</button>
+      <button class="btn btn-mini" onclick="location.href='guru.html'">🗂 Buka tampilan guru (paket, siswa, proktor)</button>
+    </div>
+    <p class="kosong" style="font-size:11.5px;margin-bottom:0">Sebagai kepala sekolah Anda juga dapat memakai seluruh fitur dashboard guru untuk sekolah ini.</p>
+  </div>
+</section>
+
+<!-- ============================ GURU ============================ -->
+<section class="halaman" id="hal-guru">
+  <h2 class="judul-hal">👩‍🏫 Akun Guru<small>Buat akun guru sekolah Anda dan reset kata sandinya</small></h2>
+  <button class="btn btn-utama" style="width:100%;margin-bottom:10px" onclick="bukaModalGuru()">➕ Tambah Guru</button>
+  <div class="kartu">
+    <div class="gulir-x"><table class="tabel">
+      <thead><tr><th>Nama</th><th>Username</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody id="tabelGuru"><tr><td colspan="4" class="kosong">Memuat…</td></tr></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ============================ KEGIATAN ============================ -->
+<section class="halaman" id="hal-kegiatan">
+  <h2 class="judul-hal">📊 Kegiatan & Laporan<small>Seluruh jadwal penilaian di sekolah Anda</small></h2>
+  <div id="daftarKegiatan"><p class="kosong">Memuat…</p></div>
+  <div id="isiLaporan"></div>
+</section>
+
+</div>
+
+<nav class="nav-bawah">
+  <button class="aktif" data-hal="hal-ringkas"><span class="iko">🏫</span>Ringkasan</button>
+  <button data-hal="hal-guru"><span class="iko">👩‍🏫</span>Guru</button>
+  <button data-hal="hal-kegiatan"><span class="iko">📊</span>Kegiatan</button>
+</nav>
+
+<!-- modal tambah guru -->
+<div class="tirai" id="tiraiGuru">
+  <div class="modal form">
+    <h3>➕ Tambah Akun Guru</h3>
+    <label>Nama lengkap</label><input type="text" id="gNama">
+    <label>Username</label><input type="text" id="gUser" placeholder="huruf kecil tanpa spasi">
+    <label>Kata sandi awal (kosongkan = 123456)</label><input type="text" id="gSandi">
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn" style="flex:1" onclick="document.getElementById('tiraiGuru').classList.remove('aktif')">Batal</button>
+      <button class="btn btn-hijau" style="flex:1" id="btnSimpanGuru" onclick="simpanGuru()">💾 Buat</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var SESI = PANDAI.sesi();
+var GURU = [], SISWA = [], ROMBEL = [], JADWAL = [];
+
+(function () {
+  if (!PANDAI.adaBackend() || !SESI || SESI.peran !== 'kepsek') {
+    $('layarMuat').innerHTML = '<div style="font-size:44px">🔐</div>' +
+      '<p><b>Silakan masuk sebagai Kepala Sekolah.</b></p>' +
+      '<a class="btn" href="' + PANDAI.akar() + 'index.html">Ke halaman masuk</a>';
+    throw new Error('blokir');
+  }
+  $('namaSaya').textContent = SESI.nama;
+  $('subKepsek').textContent = 'Kepala Sekolah · ' + SESI.sekolahId;
+  $('avatar').textContent = (SESI.nama || 'KS').split(' ').map(function (k) { return k[0]; }).slice(0, 2).join('').toUpperCase();
+})();
+
+var toastTimer;
+function toast(p, lama) { var t = $('toast'); t.textContent = p; t.classList.add('aktif');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('aktif'); }, lama || 3600); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+function keHal(id) {
+  document.querySelectorAll('.halaman').forEach(function (h) { h.classList.remove('aktif'); });
+  $(id).classList.add('aktif');
+  document.querySelectorAll('.nav-bawah button').forEach(function (b) { b.classList.toggle('aktif', b.dataset.hal === id); });
+  window.scrollTo({ top: 0 });
+}
+document.querySelectorAll('.nav-bawah button').forEach(function (b) { b.addEventListener('click', function () { keHal(b.dataset.hal); }); });
+function fmtWaktu(iso) { if (!iso) return '-'; var d = new Date(iso);
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) + ' ' + d.toTimeString().slice(0, 5); }
+
+function muatSemua() {
+  $('layarMuat').style.display = 'flex';
+  Promise.all([
+    PANDAI.api('dinas.akun.list', { peran: 'guru' }),
+    PANDAI.api('guru.siswa.list', {}),
+    PANDAI.api('guru.rombel.list', {}),
+    PANDAI.api('guru.jadwal.list', {})
+  ]).then(function (r) {
+    GURU = r[0]; SISWA = r[1]; ROMBEL = r[2]; JADWAL = r[3];
+    gambarRingkas(); gambarGuru(); gambarKegiatan();
+    $('layarMuat').style.display = 'none';
+  }).catch(function (err) {
+    $('pesanMuat').innerHTML = '⚠ ' + esc(err.message) +
+      '<br><button class="btn btn-mini" onclick="muatSemua()" style="margin-top:8px">Coba lagi</button>';
+  });
+}
+
+function gambarRingkas() {
+  $('stGuru').textContent = GURU.length;
+  $('stSiswa').textContent = SISWA.length;
+  $('stRombel').textContent = ROMBEL.length;
+  $('stJadwal').textContent = JADWAL.length;
+  var mendatang = JADWAL.filter(function (j) { return new Date(j.selesai) > new Date(); })
+    .sort(function (a, b) { return new Date(a.mulai) - new Date(b.mulai); })[0];
+  if (mendatang) {
+    $('kartuTerdekat').style.display = 'block';
+    $('kartuTerdekat').innerHTML = '<h3>⏰ Kegiatan terdekat</h3><b>' + esc(mendatang.nama) + '</b>' +
+      '<div style="font-size:12px;color:#6b7690;margin:2px 0 8px">' + fmtWaktu(mendatang.mulai) + ' – ' +
+      fmtWaktu(mendatang.selesai) + ' · ' + mendatang.mode + '</div>' +
+      '<button class="btn btn-mini btn-biru" onclick="lihatLaporan(\'' + mendatang.jadwalId + '\',\'' + esc(mendatang.nama) + '\')">📊 Laporan</button>';
+  }
+}
+
+// ---------- guru ----------
+function gambarGuru() {
+  var tb = $('tabelGuru'); tb.innerHTML = '';
+  if (!GURU.length) { tb.innerHTML = '<tr><td colspan="4" class="kosong">Belum ada akun guru.</td></tr>'; return; }
+  GURU.forEach(function (g) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + esc(g.nama) + '</td><td>' + esc(g.username) + '</td>' +
+      '<td><span class="chip ' + (g.status === 'aktif' ? 'c-hijau' : 'c-abu') + '">' + g.status + '</span></td>' +
+      '<td><button class="btn btn-mini" onclick="resetGuru(\'' + g.userId + '\',\'' + esc(g.nama) + '\')">🔑 Reset</button></td>';
+    tb.appendChild(tr);
+  });
+}
+function bukaModalGuru() { $('gNama').value = ''; $('gUser').value = ''; $('gSandi').value = ''; $('tiraiGuru').classList.add('aktif'); }
+function simpanGuru() {
+  var nama = $('gNama').value.trim(), user = $('gUser').value.trim().toLowerCase();
+  if (!nama || !user) { toast('⚠ Isi nama dan username'); return; }
+  $('btnSimpanGuru').disabled = true;
+  PANDAI.api('dinas.akun.save', { peran: 'guru', nama: nama, username: user, password: $('gSandi').value || '123456' })
+    .then(function () {
+      $('tiraiGuru').classList.remove('aktif');
+      alert('Akun guru dibuat!\n\nUsername: ' + user + '\nKata sandi: ' + ($('gSandi').value || '123456'));
+      muatSemua();
+    }).catch(function (err) { toast('⚠ ' + err.message); })
+    .finally(function () { $('btnSimpanGuru').disabled = false; });
+}
+function resetGuru(userId, nama) {
+  if (!confirm('Reset kata sandi ' + nama + '?')) return;
+  PANDAI.api('dinas.akun.reset', { userId: userId }).then(function (r) {
+    alert('Kata sandi baru ' + nama + ': ' + r.password + '\nCatat sekarang — hanya tampil sekali.');
+  }).catch(function (err) { toast('⚠ ' + err.message + ' (pastikan backend terbaru sudah di-deploy)'); });
+}
+
+// ---------- kegiatan & laporan ----------
+var CJ = { sumatif: 'c-hijau', tryout: 'c-kuning', latihan: 'c-abu' };
+function gambarKegiatan() {
+  var w = $('daftarKegiatan'); w.innerHTML = '';
+  if (!JADWAL.length) { w.innerHTML = '<p class="kosong">Belum ada kegiatan penilaian.</p>'; return; }
+  JADWAL.slice().reverse().forEach(function (j) {
+    var div = document.createElement('div'); div.className = 'soal-item';
+    div.innerHTML = '<div class="atas"><span class="chip ' + (CJ[j.jenis] || 'c-abu') + '">' + String(j.jenis).toUpperCase() + '</span>' +
+      '<span class="chip ' + (j.mode === 'offline' ? 'c-koral' : 'c-biru') + '">' + String(j.mode).toUpperCase() + '</span>' +
+      '<span style="font-size:11px;color:#8a93a6;margin-left:auto">' + j.jadwalId + '</span></div>' +
+      '<p><b>' + esc(j.nama) + '</b><br><span style="font-size:11.5px;color:#6b7690">' +
+      fmtWaktu(j.mulai) + ' – ' + fmtWaktu(j.selesai) + '</span></p>' +
+      '<button class="btn btn-mini btn-biru" onclick="lihatLaporan(\'' + j.jadwalId + '\',\'' + esc(j.nama) + '\')">📊 Laporan</button>';
+    w.appendChild(div);
+  });
+}
+function lihatLaporan(jadwalId, nama) {
+  keHal('hal-kegiatan');
+  $('isiLaporan').innerHTML = '<p class="kosong">Memuat laporan…</p>';
+  PANDAI.api('laporan.rekap', { jadwalId: jadwalId }).then(function (d) {
+    var html = '<div class="kartu"><h3>📊 ' + esc(nama) + '</h3>' +
+      '<div class="grid-stat" style="grid-template-columns:repeat(3,1fr);margin-bottom:8px">' +
+      '<div class="stat"><b>' + d.rerata + '</b><span>Rata-rata</span></div>' +
+      '<div class="stat"><b>' + d.tertinggi + '</b><span>Tertinggi</span></div>' +
+      '<div class="stat"><b>' + d.jumlahSelesai + '/' + d.jumlahPeserta + '</b><span>Selesai</span></div></div>' +
+      '<div class="gulir-x"><table class="tabel"><thead><tr><th>Nama</th><th>Skor</th><th>Kategori</th></tr></thead><tbody>';
+    if (!d.rincian.length) html += '<tr><td colspan="3" class="kosong">Belum ada yang selesai.</td></tr>';
+    d.rincian.sort(function (a, b) { return b.skor - a.skor; }).forEach(function (n) {
+      var ck = { Istimewa: 'c-hijau', Baik: 'c-biru', Memadai: 'c-kuning', Kurang: 'c-koral' }[n.kategori] || 'c-abu';
+      html += '<tr><td>' + esc(n.nama) + '</td><td><b>' + n.skor + '</b></td>' +
+        '<td><span class="chip ' + ck + '">' + n.kategori + '</span></td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+    $('isiLaporan').innerHTML = html;
+    window.scrollTo({ top: document.body.scrollHeight });
+  }).catch(function (err) { $('isiLaporan').innerHTML = '<p class="kosong">⚠ ' + esc(err.message) + '</p>'; });
+}
+
+muatSemua();
+</script>
+</body>
+</html>

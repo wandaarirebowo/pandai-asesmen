@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FFC53D">
+<title>PANDAI — Cetak & Pindai (Offline/OMR)</title>
+<style>
+:root{
+  --kuning:#FFC53D; --biru:#4DA3FF; --koral:#FF7A59; --hijau:#3EC486;
+  --tinta:#2B3A55; --krem:#FFF8EC; --putih:#FFF;
+  --garis:rgba(255,122,89,.10); --radius:16px; --bayang:0 3px 0 rgba(43,58,85,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;color:var(--tinta);font-size:14.5px;
+  background:repeating-linear-gradient(to bottom, transparent 0 31px, var(--garis) 31px 32px),var(--krem);
+  padding-bottom:40px;}
+.app{max-width:640px;margin:0 auto;padding:10px 12px;}
+h2.judul-hal{font-size:19px;margin:8px 2px 12px;}
+h2.judul-hal small{font-weight:400;font-size:12px;color:#6b7690;display:block;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--putih);border-bottom:2px solid rgba(43,58,85,.12);
+  padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.topbar .ident{flex:1;line-height:1.2;}
+.topbar .ident b{font-size:14px;}
+.topbar .ident span{font-size:11px;color:#6b7690;display:block;}
+.kartu{background:var(--putih);border:2px solid rgba(43,58,85,.12);border-radius:var(--radius);
+  box-shadow:var(--bayang);padding:14px;margin-bottom:12px;}
+.kartu h3{margin:0 0 10px;font-size:15px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:13.5px;
+  font-weight:700;color:var(--tinta);background:var(--putih);border:2px solid var(--tinta);border-radius:999px;
+  padding:9px 15px;min-height:40px;cursor:pointer;box-shadow:0 2px 0 var(--tinta);user-select:none;}
+.btn:active{transform:translateY(2px);box-shadow:0 0 0 var(--tinta);}
+.btn-utama{background:var(--kuning);}
+.btn-biru{background:var(--biru);color:#fff;border-color:#2b6cb0;box-shadow:0 2px 0 #2b6cb0;}
+.btn-hijau{background:var(--hijau);color:#fff;border-color:#238b60;box-shadow:0 2px 0 #238b60;}
+.btn-koral{background:var(--koral);color:#fff;border-color:#c24a2e;box-shadow:0 2px 0 #c24a2e;}
+.btn-mini{font-size:12px;padding:5px 10px;min-height:30px;}
+.btn[disabled]{opacity:.5;pointer-events:none;}
+.chip{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;border:1.5px solid transparent;white-space:nowrap;}
+.c-biru{background:#E3F1FF;color:#1D6FCC;border-color:#9CCBFF;} .c-hijau{background:#E7FAF1;color:#1B8A5B;border-color:#9FE3C4;}
+.c-kuning{background:#FFF3D4;color:#9A6B00;border-color:#FFD98A;} .c-koral{background:#FFEAE3;color:#C2431F;border-color:#FFB49C;}
+.c-abu{background:#EEF0F4;color:#5B6779;border-color:#C9D0DB;}
+.tab{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.tab button{font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;border:2px solid rgba(43,58,85,.25);
+  background:#fff;color:var(--tinta);border-radius:999px;padding:7px 13px;}
+.tab button.aktif{background:var(--tinta);color:#fff;border-color:var(--tinta);}
+.panel{display:none;} .panel.aktif{display:block;}
+.form label{display:block;font-size:12px;font-weight:800;margin:10px 0 4px;}
+.form select,.form input{width:100%;font-family:inherit;font-size:14px;color:var(--tinta);
+  border:2px solid rgba(43,58,85,.25);border-radius:10px;padding:9px 10px;background:#fff;}
+#lienzo,#tampil{max-width:100%;border-radius:12px;border:2px solid rgba(43,58,85,.2);background:#000;display:block;}
+.wrap-kanvas{position:relative;touch-action:none;}
+.kosong{color:#8a93a6;font-size:13px;text-align:center;padding:14px 0;}
+.soal-verif{border:2px solid rgba(43,58,85,.12);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#FFFDF5;}
+.soal-verif .no{font-weight:800;}
+.pil{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:36px;margin:3px;
+  border:2px solid var(--tinta);border-radius:10px;background:#fff;font-weight:800;cursor:pointer;font-size:13px;}
+.pil.on{background:var(--hijau);color:#fff;}
+.pil.on-s{background:var(--koral);color:#fff;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;background:var(--tinta);
+  color:#fff;font-size:13px;font-weight:700;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;
+  transition:opacity .2s;max-width:92%;text-align:center;}
+.toast.aktif{opacity:1;}
+.muat{position:fixed;inset:0;z-index:200;background:rgba(255,248,236,.92);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;font-weight:800;padding:20px;text-align:center;}
+.muat .putar{width:44px;height:44px;border-radius:50%;border:5px solid rgba(43,58,85,.15);
+  border-top-color:var(--koral);animation:putar .8s linear infinite;}
+@keyframes putar{to{transform:rotate(360deg)}}
+.tabel{width:100%;border-collapse:collapse;font-size:13px;}
+.tabel th{text-align:left;font-size:11px;color:#6b7690;padding:6px 8px;border-bottom:2px solid rgba(43,58,85,.15);}
+.tabel td{padding:7px 8px;border-bottom:1.5px dashed rgba(43,58,85,.12);}
+</style>
+</head>
+<body>
+<div class="muat" id="layarMuat"><div class="putar"></div><div id="pesanMuat">Memuat…</div></div>
+
+<header class="topbar">
+  <button class="btn btn-mini" onclick="location.href='guru.html'">←</button>
+  <div class="ident"><b id="judulJadwal">Cetak & Pindai</b><span id="subJadwal">Mode offline / OMR</span></div>
+</header>
+
+<div class="app">
+  <div class="tab" id="tab">
+    <button class="aktif" data-p="p-naskah">🖨 Naskah</button>
+    <button data-p="p-ljk">🖨 LJK</button>
+    <button data-p="p-pindai">📷 Pindai</button>
+    <button data-p="p-manual">✍️ Manual</button>
+    <button data-p="p-hasil">📊 Hasil</button>
+  </div>
+
+  <!-- NASKAH -->
+  <section class="panel aktif" id="p-naskah">
+    <div class="kartu form">
+      <h3>🖨 Cetak Naskah Soal</h3>
+      <p style="font-size:12.5px;color:#6b7690;margin:0 0 8px">Naskah dicetak per varian (urutan soal berbeda tiap varian sebagai anti-contek). Kunci jawaban tidak dicetak.</p>
+      <label>Varian</label>
+      <select id="nkVarian"><option value="A">Varian A</option><option value="B">Varian B</option></select>
+      <button class="btn btn-utama" style="width:100%;margin-top:12px" onclick="cetakNaskah()">🖨 Buka & Cetak Naskah</button>
+    </div>
+  </section>
+
+  <!-- LJK -->
+  <section class="panel" id="p-ljk">
+    <div class="kartu form">
+      <h3>🖨 Cetak Lembar Jawaban (LJK OMR)</h3>
+      <p style="font-size:12.5px;color:#6b7690;margin:0 0 8px">Satu LJK per siswa: 4 titik kalibrasi + strip identitas + bulatan jawaban.</p>
+      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="ljk2var" checked style="width:auto"> Gunakan 2 varian (A/B) selang-seling antar siswa</label>
+      <label>Cetak untuk</label>
+      <select id="ljkRombel"><option value="">Semua peserta jadwal</option></select>
+      <button class="btn btn-utama" style="width:100%;margin-top:12px" onclick="cetakLJK()">🖨 Buka & Cetak Semua LJK</button>
+      <p class="kosong" style="font-size:11.5px" id="ljkInfo"></p>
+    </div>
+  </section>
+
+  <!-- PINDAI -->
+  <section class="panel" id="p-pindai">
+    <div class="kartu">
+      <h3>📷 Pindai LJK</h3>
+      <div id="tahapAmbil">
+        <video id="video" playsinline style="width:100%;border-radius:12px;background:#000;display:none"></video>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn btn-biru" id="btnKamera" onclick="mulaiKamera()">📷 Nyalakan kamera</button>
+          <button class="btn" id="btnJepret" onclick="jepret()" style="display:none">📸 Ambil</button>
+          <label class="btn" style="cursor:pointer">📁 Dari galeri<input type="file" accept="image/*" capture="environment" id="fileImg" style="display:none" onchange="dariFile(event)"></label>
+        </div>
+        <p class="kosong" style="font-size:11.5px">Bidik seluruh lembar. Pastikan 4 kotak hitam di sudut terlihat jelas.</p>
+      </div>
+      <div id="tahapKoreksi" style="display:none">
+        <p style="font-size:12.5px;color:#6b7690;margin:0 0 6px">Geser 4 titik agar tepat di tengah kotak hitam sudut, lalu Baca.</p>
+        <div class="wrap-kanvas"><canvas id="tampil"></canvas></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn" onclick="ulangAmbil()">↺ Ulangi</button>
+          <button class="btn btn-hijau" onclick="bacaLJK()">🔍 Baca LJK</button>
+        </div>
+      </div>
+      <div id="tahapVerif" style="display:none">
+        <div id="infoVerif"></div>
+        <div id="daftarVerif"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" onclick="ulangAmbil()">↺ Batal</button>
+          <button class="btn btn-hijau" id="btnSimpanVerif" onclick="simpanVerif()">💾 Simpan hasil</button>
+        </div>
+      </div>
+    </div>
+    <canvas id="lienzo" style="display:none"></canvas>
+  </section>
+
+  <!-- MANUAL -->
+  <section class="panel" id="p-manual">
+    <div class="kartu form">
+      <h3>✍️ Input Nilai Manual</h3>
+      <p style="font-size:12.5px;color:#6b7690;margin:0 0 6px">Cadangan bila pemindaian gagal. Pilih siswa dan varian, lalu isi jawaban.</p>
+      <label>Siswa</label><select id="mnSiswa"></select>
+      <label>Varian</label><select id="mnVarian"><option value="A">A</option><option value="B">B</option></select>
+      <button class="btn btn-biru" style="width:100%;margin-top:10px" onclick="muatManual()">Muat lembar jawaban</button>
+    </div>
+    <div id="mnForm"></div>
+  </section>
+
+  <!-- HASIL -->
+  <section class="panel" id="p-hasil">
+    <div class="kartu">
+      <h3>📊 Hasil OMR <button class="btn btn-mini" onclick="muatHasil()" style="float:right">⟳</button></h3>
+      <div id="antreanInfo" style="font-size:12px;margin-bottom:8px"></div>
+      <div style="overflow-x:auto"><table class="tabel">
+        <thead><tr><th>Siswa</th><th>Status</th><th>Skor</th></tr></thead>
+        <tbody id="tabelHasil"><tr><td colspan="3" class="kosong">Memuat…</td></tr></tbody>
+      </table></div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/omr.js"></script>
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var SESI = PANDAI.sesi();
+var JADWAL = null, PAKET = null, SOAL = [], STIM = {}, PESERTA = [];
+var jadwalId = new URLSearchParams(location.search).get('jadwal') || '';
+
+(function () {
+  if (!PANDAI.adaBackend() || !SESI || ['guru', 'kepsek'].indexOf(SESI.peran) === -1) {
+    $('layarMuat').innerHTML = '<div style="font-size:44px">🔐</div><p><b>Masuk sebagai Guru.</b></p>' +
+      '<a class="btn" href="' + PANDAI.akar() + 'index.html">Masuk</a>'; throw new Error('blokir');
+  }
+})();
+
+var toastTimer;
+function toast(p, lama) { var t = $('toast'); t.textContent = p; t.classList.add('aktif');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('aktif'); }, lama || 3200); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+document.querySelectorAll('#tab button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('#tab button').forEach(function (x) { x.classList.remove('aktif'); });
+    document.querySelectorAll('.panel').forEach(function (x) { x.classList.remove('aktif'); });
+    b.classList.add('aktif'); $(b.dataset.p).classList.add('aktif');
+    if (b.dataset.p === 'p-hasil') muatHasil();
+    if (b.dataset.p === 'p-manual') isiSiswaManual();
+  });
+});
+function varianSiswa(idx) { return (idx % 2 === 1) ? 'B' : 'A'; }
+
+// ---------- muat ----------
+function muat() {
+  if (!jadwalId) { $('pesanMuat').innerHTML = '⚠ Jadwal tidak ditentukan.<br><a class="btn btn-mini" href="guru.html">Kembali</a>'; return; }
+  $('layarMuat').style.display = 'flex';
+  PANDAI.api('guru.jadwal.list', {}).then(function (js) {
+    JADWAL = js.filter(function (j) { return j.jadwalId === jadwalId; })[0];
+    if (!JADWAL) throw new Error('Jadwal tidak ditemukan');
+    $('judulJadwal').textContent = JADWAL.nama;
+    $('subJadwal').textContent = 'Offline/OMR · ' + JADWAL.mode;
+    return Promise.all([
+      PANDAI.api('paket.detail', { paketId: JADWAL.paketId }),
+      PANDAI.api('guru.monitor', { jadwalId: jadwalId })
+    ]);
+  }).then(function (r) {
+    PAKET = r[0].paket; SOAL = r[0].soal.filter(function (s) { return !s.hilang; }); STIM = r[0].stimulus || {};
+    PESERTA = r[1];
+    $('ljkInfo').textContent = PESERTA.length + ' peserta · ' + SOAL.length + ' butir';
+    $('layarMuat').style.display = 'none';
+  }).catch(function (err) {
+    $('pesanMuat').innerHTML = '⚠ ' + esc(err.message) + '<br><a class="btn btn-mini" href="guru.html" style="margin-top:8px">Kembali</a>';
+  });
+}
+
+// ---------- render cetak (window.print) ----------
+var MM = 0.19; // mm per satuan kanonik (uniform)
+function bukaCetak(judul, isi) {
+  var w = window.open('', '_blank');
+  if (!w) { toast('⚠ Popup diblokir — izinkan popup untuk mencetak'); return; }
+  w.document.write('<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>' + judul + '</title><style>' +
+    '@page{size:A4;margin:10mm;} *{box-sizing:border-box;} body{font-family:Arial,sans-serif;color:#000;margin:0;}' +
+    '.lembar{position:relative;width:190mm;height:268.7mm;page-break-after:always;overflow:hidden;}' +
+    '.fid{position:absolute;background:#000;transform:translate(-50%,-50%);}' +
+    '.bub{position:absolute;border:1.6px solid #000;border-radius:50%;transform:translate(-50%,-50%);' +
+    'display:flex;align-items:center;justify-content:center;font-size:8pt;color:#555;}' +
+    '.idc{position:absolute;transform:translate(-50%,-50%);border:1px solid #000;}' +
+    '.lbl{position:absolute;transform:translate(0,-50%);font-size:9pt;font-weight:bold;}' +
+    '.hdr{position:absolute;left:0;right:0;text-align:center;font-size:11pt;}' +
+    '.nsk{padding:4mm 2mm;font-size:11pt;line-height:1.5;} .nsk .stim{border:1px solid #000;padding:6px 8px;margin:6px 0;background:#f4f4f4;white-space:pre-line;font-size:10.5pt;}' +
+    '.nsk .q{margin:8px 0;} .nsk .opt{margin-left:14px;} .noprint{text-align:center;margin:8px}' +
+    '@media print{.noprint{display:none;}}' +
+    '</style></head><body>' +
+    '<div class="noprint"><button onclick="window.print()" style="font-size:15px;padding:8px 20px">🖨 Cetak</button></div>' +
+    isi + '</body></html>');
+  w.document.close();
+  setTimeout(function () { try { w.focus(); } catch (e) {} }, 300);
+}
+
+function headerLembar(sub) {
+  return '<div class="hdr" style="top:2mm">' + esc(PANDAI.sesi().sekolahId) + ' — PANDAI</div>' +
+    '<div class="hdr" style="top:7mm;font-weight:bold">' + esc(JADWAL.nama) + '</div>' +
+    '<div class="hdr" style="top:12mm;font-size:9pt">' + sub + '</div>';
+}
+
+function cetakNaskah() {
+  var varian = $('nkVarian').value;
+  var urut = OMR.urutanVarian(SOAL, PAKET.paketId, varian);
+  var html = '<div class="lembar"><div class="nsk">' +
+    '<div style="text-align:center"><b>' + esc(JADWAL.nama) + '</b><br>Naskah Soal — Varian ' + varian +
+    ' · ' + urut.length + ' butir<br><span style="font-size:9pt">Nama: ______________  Kelas: ______</span></div><hr>';
+  var stimTampil = {};
+  urut.forEach(function (s, i) {
+    if (s.stimulusId && STIM[s.stimulusId] && !stimTampil[s.stimulusId]) {
+      stimTampil[s.stimulusId] = true;
+      html += '<div class="stim"><b>Bacaan: ' + esc(STIM[s.stimulusId].judul) + '</b>\n' + esc(STIM[s.stimulusId].konten) + '</div>';
+    }
+    html += '<div class="q"><b>' + (i + 1) + '.</b> ' + esc(s.pertanyaan);
+    if (s.bentuk === 'PG' || s.bentuk === 'PGK_MCMA') {
+      (s.opsi || []).forEach(function (o, oi) { html += '<div class="opt">' + 'ABCDE'[oi] + '. ' + esc(o) + '</div>'; });
+      if (s.bentuk === 'PGK_MCMA') html += '<div class="opt"><i>(jawaban benar lebih dari satu)</i></div>';
+    } else if (s.bentuk === 'PGK_KATEGORI' && s.opsi) {
+      html += '<div class="opt"><i>Tentukan ' + esc(s.opsi.kategori[0]) + '/' + esc(s.opsi.kategori[1]) + ':</i></div>';
+      s.opsi.pernyataan.forEach(function (p, pi) { html += '<div class="opt">' + (pi + 1) + ') ' + esc(p) + '</div>'; });
+    } else if (s.bentuk === 'ISIAN') { html += '<div class="opt">Jawaban: __________ <i>(isian — nilai manual)</i></div>'; }
+    html += '</div>';
+  });
+  html += '</div></div>';
+  bukaCetak('Naskah ' + varian, html);
+}
+
+function ljkSatu(peserta, idx, varian) {
+  var urut = OMR.urutanVarian(SOAL, PAKET.paketId, varian);
+  var lay = OMR.tataLetak(urut);
+  var bits = OMR.identBits(idx, varian === 'B');
+  var el = [];
+  function pos(x, y) { return 'left:' + (x * MM) + 'mm;top:' + (y * MM) + 'mm;'; }
+  // fiducial
+  lay.fid.forEach(function (f) {
+    el.push('<div class="fid" style="' + pos(f.x, f.y) + 'width:' + (lay.fidSize * MM) + 'mm;height:' + (lay.fidSize * MM) + 'mm;"></div>');
+  });
+  // identitas
+  lay.ident.cells.forEach(function (c, i) {
+    var isi = bits[i] ? '#000' : '#fff';
+    el.push('<div class="idc" style="' + pos(c.x, c.y) + 'width:' + (lay.ident.size * MM) + 'mm;height:' + (lay.ident.size * MM) + 'mm;background:' + isi + ';"></div>');
+  });
+  // header + nama
+  el.push('<div class="hdr" style="top:3mm;font-weight:bold">LEMBAR JAWABAN — ' + esc(JADWAL.nama) + '</div>');
+  el.push('<div class="hdr" style="top:8mm;font-size:9pt">Nama: ' + esc(peserta.nama) + ' · Varian ' + varian + ' · No. ' + (idx + 1) + '</div>');
+  // baris jawaban
+  lay.rows.forEach(function (row) {
+    if (row.isian) {
+      el.push('<div class="lbl" style="' + pos(60, row.y) + '">' + row.nomor + '. (isian — nilai manual)</div>');
+      return;
+    }
+    if (row.bentuk === 'PG' || row.bentuk === 'PGK_MCMA') {
+      el.push('<div class="lbl" style="' + pos(60, row.y) + '">' + row.nomor + '.</div>');
+      row.bubbles.forEach(function (b) {
+        el.push('<div class="bub" style="' + pos(b.x, b.y) + 'width:' + (b.r * 2 * MM) + 'mm;height:' + (b.r * 2 * MM) + 'mm;">' + b.huruf + '</div>');
+      });
+    } else if (row.bentuk === 'PGK_KATEGORI') {
+      row.subRows.forEach(function (sr, si) {
+        var lbl = row.nomor + (si === 0 ? '.' : '') + ' (' + (si + 1) + ')';
+        el.push('<div class="lbl" style="' + pos(60, sr.y) + 'font-weight:normal;font-size:8pt">' + lbl + '</div>');
+        el.push('<div class="bub" style="' + pos(sr.bB.x, sr.bB.y) + 'width:' + (sr.bB.r * 2 * MM) + 'mm;height:' + (sr.bB.r * 2 * MM) + 'mm;">' + sr.bB.huruf + '</div>');
+        el.push('<div class="bub" style="' + pos(sr.bS.x, sr.bS.y) + 'width:' + (sr.bS.r * 2 * MM) + 'mm;height:' + (sr.bS.r * 2 * MM) + 'mm;">' + sr.bS.huruf + '</div>');
+      });
+    }
+  });
+  return '<div class="lembar">' + el.join('') + '</div>';
+}
+
+function cetakLJK() {
+  var dua = $('ljk2var').checked;
+  var daftar = PESERTA;
+  if (!daftar.length) { toast('⚠ Belum ada peserta'); return; }
+  var html = daftar.map(function (p, i) {
+    var varian = dua ? varianSiswa(i) : 'A';
+    return ljkSatu(p, i, varian);
+  }).join('');
+  bukaCetak('LJK', html);
+}
+
+// ---------- pindai ----------
+var streamAktif = null, imgKanvas = null, fidTitik = null, tampilSkala = 1, dragIdx = -1, hasilBaca = null;
+function mulaiKamera() {
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } } })
+    .then(function (st) {
+      streamAktif = st; var v = $('video'); v.srcObject = st; v.style.display = 'block'; v.play();
+      $('btnKamera').style.display = 'none'; $('btnJepret').style.display = 'inline-flex';
+    }).catch(function () { toast('⚠ Kamera tidak tersedia — gunakan "Dari galeri"'); });
+}
+function stopKamera() { if (streamAktif) { streamAktif.getTracks().forEach(function (t) { t.stop(); }); streamAktif = null; } $('video').style.display = 'none'; }
+function jepret() {
+  var v = $('video'); var c = $('lienzo');
+  var maxW = 1000, sk = Math.min(1, maxW / v.videoWidth);
+  c.width = v.videoWidth * sk; c.height = v.videoHeight * sk;
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  stopKamera(); prosesGambar();
+}
+function dariFile(ev) {
+  var f = ev.target.files[0]; if (!f) return;
+  var img = new Image();
+  img.onload = function () {
+    var c = $('lienzo'); var maxW = 1000, sk = Math.min(1, maxW / img.width);
+    c.width = img.width * sk; c.height = img.height * sk;
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    prosesGambar();
+  };
+  img.src = URL.createObjectURL(f);
+}
+function prosesGambar() {
+  var c = $('lienzo'), w = c.width, h = c.height;
+  var imgData = c.getContext('2d').getImageData(0, 0, w, h);
+  imgKanvas = { data: imgData, gray: OMR.keAbuAbu(imgData), w: w, h: h };
+  var det = OMR.deteksiFiducial(imgKanvas.gray, w, h);
+  fidTitik = det || [{ x: w * 0.1, y: h * 0.1 }, { x: w * 0.9, y: h * 0.1 }, { x: w * 0.9, y: h * 0.9 }, { x: w * 0.1, y: h * 0.9 }];
+  $('tahapAmbil').style.display = 'none';
+  $('tahapKoreksi').style.display = 'block'; $('tahapVerif').style.display = 'none';
+  gambarTampil();
+  toast(det ? '✔ 4 titik terdeteksi — geser bila perlu' : '⚠ Deteksi otomatis gagal — letakkan 4 titik manual', 3800);
+}
+function gambarTampil() {
+  var c = $('lienzo'), t = $('tampil');
+  var lebarTampil = Math.min(c.width, $('p-pindai').clientWidth - 32);
+  tampilSkala = lebarTampil / c.width;
+  t.width = c.width * tampilSkala; t.height = c.height * tampilSkala;
+  var g = t.getContext('2d');
+  g.drawImage(c, 0, 0, t.width, t.height);
+  var warna = ['#FF7A59', '#4DA3FF', '#3EC486', '#FFC53D'];
+  fidTitik.forEach(function (p, i) {
+    var x = p.x * tampilSkala, y = p.y * tampilSkala;
+    g.strokeStyle = warna[i]; g.lineWidth = 3;
+    g.beginPath(); g.arc(x, y, 12, 0, 7); g.stroke();
+    g.beginPath(); g.moveTo(x - 16, y); g.lineTo(x + 16, y); g.moveTo(x, y - 16); g.lineTo(x, y + 16); g.stroke();
+  });
+}
+(function pasangDrag() {
+  var t = $('tampil');
+  function ke(ev) { var r = t.getBoundingClientRect(); var cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+    var cy = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top; return { x: cx / tampilSkala, y: cy / tampilSkala }; }
+  function down(ev) { ev.preventDefault(); var p = ke(ev); dragIdx = -1; var best = 1e9;
+    fidTitik.forEach(function (f, i) { var d = Math.hypot(f.x - p.x, f.y - p.y); if (d < best) { best = d; dragIdx = i; } });
+    if (best > 80) dragIdx = -1; }
+  function move(ev) { if (dragIdx < 0) return; ev.preventDefault(); fidTitik[dragIdx] = ke(ev); gambarTampil(); }
+  function up() { dragIdx = -1; }
+  t.addEventListener('mousedown', down); t.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+  t.addEventListener('touchstart', down, { passive: false }); t.addEventListener('touchmove', move, { passive: false }); t.addEventListener('touchend', up);
+})();
+function ulangAmbil() {
+  $('tahapAmbil').style.display = 'block'; $('tahapKoreksi').style.display = 'none'; $('tahapVerif').style.display = 'none';
+  $('btnKamera').style.display = 'inline-flex'; $('btnJepret').style.display = 'none';
+}
+function bacaLJK() {
+  var ident = OMR.bacaIdentitas(imgKanvas.gray, imgKanvas.w, imgKanvas.h, fidTitik);
+  if (!ident) { toast('⚠ Gagal membaca — perbaiki posisi titik'); return; }
+  var peserta = PESERTA[ident.siswaIndex];
+  var varian = ident.varianB ? 'B' : 'A';
+  if (!peserta) { toast('⚠ Identitas tidak dikenal (indeks ' + ident.siswaIndex + ') — coba lagi atau input manual', 4200); return; }
+  var urut = OMR.urutanVarian(SOAL, PAKET.paketId, varian);
+  var baca = OMR.bacaJawaban(imgKanvas.gray, imgKanvas.w, imgKanvas.h, fidTitik, urut);
+  hasilBaca = { siswaId: peserta.siswaId, nama: peserta.nama, varian: varian, urut: urut, jawaban: baca.jawaban };
+  tampilVerif();
+}
+function tampilVerif() {
+  $('tahapKoreksi').style.display = 'none'; $('tahapVerif').style.display = 'block';
+  $('infoVerif').innerHTML = '<div class="kartu" style="background:#FFF3D4;padding:10px"><b>' + esc(hasilBaca.nama) +
+    '</b> · Varian ' + hasilBaca.varian + '<br><span style="font-size:11.5px;color:#6b7690">Periksa & koreksi jawaban di bawah sebelum menyimpan.</span></div>';
+  var w = $('daftarVerif'); w.innerHTML = '';
+  hasilBaca.urut.forEach(function (s, i) {
+    var jw = hasilBaca.jawaban[s.soalId];
+    var div = document.createElement('div'); div.className = 'soal-verif';
+    var html = '<span class="no">' + (i + 1) + '.</span> <span style="font-size:12px;color:#6b7690">' + s.bentuk + '</span><br>';
+    if (s.bentuk === 'PG') {
+      (s.opsi || []).forEach(function (o, oi) {
+        html += '<span class="pil ' + (jw === oi ? 'on' : '') + '" data-soal="' + s.soalId + '" data-t="pg" data-i="' + oi + '">' + 'ABCDE'[oi] + '</span>';
+      });
+      html += '<span class="pil ' + (jw === undefined ? 'on-s' : '') + '" data-soal="' + s.soalId + '" data-t="pg" data-i="-1">–</span>';
+    } else if (s.bentuk === 'PGK_MCMA') {
+      var arr = Array.isArray(jw) ? jw : [];
+      (s.opsi || []).forEach(function (o, oi) {
+        html += '<span class="pil ' + (arr.indexOf(oi) !== -1 ? 'on' : '') + '" data-soal="' + s.soalId + '" data-t="mcma" data-i="' + oi + '">' + (oi + 1) + '</span>';
+      });
+    } else if (s.bentuk === 'PGK_KATEGORI') {
+      var res = Array.isArray(jw) ? jw : [];
+      s.opsi.pernyataan.forEach(function (p, pi) {
+        html += '<div style="margin-top:4px;font-size:12.5px">(' + (pi + 1) + ') ' +
+          '<span class="pil ' + (res[pi] === 'B' ? 'on' : '') + '" data-soal="' + s.soalId + '" data-t="kat" data-p="' + pi + '" data-v="B">' + esc(s.opsi.kategori[0][0]) + '</span>' +
+          '<span class="pil ' + (res[pi] === 'S' ? 'on-s' : '') + '" data-soal="' + s.soalId + '" data-t="kat" data-p="' + pi + '" data-v="S">' + esc(s.opsi.kategori[1][0]) + '</span></div>';
+      });
+    } else {
+      html += '<input type="text" data-soal="' + s.soalId + '" data-t="isian" placeholder="jawaban isian" style="width:100%;margin-top:4px;padding:6px;border:2px solid #ccc;border-radius:8px">';
+    }
+    div.innerHTML = html; w.appendChild(div);
+  });
+  w.querySelectorAll('.pil').forEach(function (el) { el.addEventListener('click', function () { klikPil(el); }); });
+}
+function klikPil(el) {
+  var soal = el.dataset.soal, t = el.dataset.t;
+  if (t === 'pg') {
+    el.parentElement.querySelectorAll('[data-t="pg"]').forEach(function (x) { x.classList.remove('on', 'on-s'); });
+    el.classList.add(el.dataset.i === '-1' ? 'on-s' : 'on');
+  } else if (t === 'mcma') { el.classList.toggle('on'); }
+  else if (t === 'kat') {
+    el.parentElement.querySelectorAll('[data-p="' + el.dataset.p + '"]').forEach(function (x) { x.classList.remove('on', 'on-s'); });
+    el.classList.add(el.dataset.v === 'B' ? 'on' : 'on-s');
+  }
+}
+function kumpulkanVerif() {
+  var jawaban = {};
+  hasilBaca.urut.forEach(function (s) {
+    if (s.bentuk === 'PG') {
+      var on = $('daftarVerif').querySelector('[data-soal="' + s.soalId + '"][data-t="pg"].on');
+      jawaban[s.soalId] = on ? Number(on.dataset.i) : undefined;
+    } else if (s.bentuk === 'PGK_MCMA') {
+      var arr = [];
+      $('daftarVerif').querySelectorAll('[data-soal="' + s.soalId + '"][data-t="mcma"].on').forEach(function (x) { arr.push(Number(x.dataset.i)); });
+      jawaban[s.soalId] = arr.length ? arr : undefined;
+    } else if (s.bentuk === 'PGK_KATEGORI') {
+      var res = s.opsi.pernyataan.map(function (p, pi) {
+        var on = $('daftarVerif').querySelector('[data-soal="' + s.soalId + '"][data-p="' + pi + '"].on, [data-soal="' + s.soalId + '"][data-p="' + pi + '"].on-s');
+        return on ? on.dataset.v : null;
+      });
+      jawaban[s.soalId] = res;
+    } else {
+      var inp = $('daftarVerif').querySelector('[data-soal="' + s.soalId + '"][data-t="isian"]');
+      jawaban[s.soalId] = inp && inp.value.trim() ? inp.value.trim() : undefined;
+    }
+  });
+  return jawaban;
+}
+function simpanVerif() {
+  var jawaban = kumpulkanVerif();
+  $('btnSimpanVerif').disabled = true;
+  PANDAI.api('guru.omr.submit', { jadwalId: jadwalId, siswaId: hasilBaca.siswaId, jawaban: jawaban })
+    .then(function (r) {
+      toast('✔ ' + hasilBaca.nama + ' — skor ' + r.skor + ' (' + r.kategori + ')', 4200);
+      ulangAmbil();
+    }).catch(function (err) {
+      // gagal jaringan → antre kirim ulang
+      PANDAI.kirimAntre('guru.omr.submit', { jadwalId: jadwalId, siswaId: hasilBaca.siswaId, jawaban: jawaban });
+      toast('⟳ ' + hasilBaca.nama + ' disimpan luring — akan disinkronkan otomatis', 4200);
+      ulangAmbil();
+    }).finally(function () { $('btnSimpanVerif').disabled = false; });
+}
+
+// ---------- manual ----------
+function isiSiswaManual() {
+  $('mnSiswa').innerHTML = PESERTA.map(function (p, i) { return '<option value="' + i + '">' + esc(p.nama) + '</option>'; }).join('');
+}
+function muatManual() {
+  var idx = Number($('mnSiswa').value); var varian = $('mnVarian').value;
+  var peserta = PESERTA[idx]; if (!peserta) return;
+  var urut = OMR.urutanVarian(SOAL, PAKET.paketId, varian);
+  hasilBaca = { siswaId: peserta.siswaId, nama: peserta.nama, varian: varian, urut: urut, jawaban: {} };
+  var w = $('mnForm'); w.innerHTML = '<div id="mnDaftar"></div>' +
+    '<button class="btn btn-hijau" style="width:100%;margin-top:8px" onclick="simpanManual()">💾 Simpan nilai ' + esc(peserta.nama) + '</button>';
+  tampilVerifDi(w.querySelector('#mnDaftar'));
+}
+function tampilVerifDi(container) {
+  var w = container; w.innerHTML = '';
+  hasilBaca.urut.forEach(function (s, i) {
+    var div = document.createElement('div'); div.className = 'soal-verif';
+    var html = '<span class="no">' + (i + 1) + '.</span> <span style="font-size:12px;color:#6b7690">' + s.bentuk + '</span> ' + esc(String(s.pertanyaan).slice(0, 60)) + '<br>';
+    if (s.bentuk === 'PG') {
+      (s.opsi || []).forEach(function (o, oi) { html += '<span class="pil" data-soal="' + s.soalId + '" data-t="pg" data-i="' + oi + '">' + 'ABCDE'[oi] + '</span>'; });
+      html += '<span class="pil" data-soal="' + s.soalId + '" data-t="pg" data-i="-1">–</span>';
+    } else if (s.bentuk === 'PGK_MCMA') {
+      (s.opsi || []).forEach(function (o, oi) { html += '<span class="pil" data-soal="' + s.soalId + '" data-t="mcma" data-i="' + oi + '">' + (oi + 1) + '</span>'; });
+    } else if (s.bentuk === 'PGK_KATEGORI') {
+      s.opsi.pernyataan.forEach(function (p, pi) {
+        html += '<div style="margin-top:4px;font-size:12.5px">(' + (pi + 1) + ') ' +
+          '<span class="pil" data-soal="' + s.soalId + '" data-t="kat" data-p="' + pi + '" data-v="B">' + esc(s.opsi.kategori[0][0]) + '</span>' +
+          '<span class="pil" data-soal="' + s.soalId + '" data-t="kat" data-p="' + pi + '" data-v="S">' + esc(s.opsi.kategori[1][0]) + '</span></div>';
+      });
+    } else { html += '<input type="text" data-soal="' + s.soalId + '" data-t="isian" style="width:100%;margin-top:4px;padding:6px;border:2px solid #ccc;border-radius:8px">'; }
+    div.innerHTML = html; w.appendChild(div);
+  });
+  w.querySelectorAll('.pil').forEach(function (el) { el.addEventListener('click', function () { klikPil(el); }); });
+}
+function simpanManual() {
+  var container = $('mnForm').querySelector('#mnDaftar');
+  var jawaban = kumpulkanVerifDari(container);
+  PANDAI.api('guru.omr.submit', { jadwalId: jadwalId, siswaId: hasilBaca.siswaId, jawaban: jawaban })
+    .then(function (r) { toast('✔ ' + hasilBaca.nama + ' — skor ' + r.skor + ' (' + r.kategori + ')', 4200); $('mnForm').innerHTML = ''; })
+    .catch(function (err) {
+      PANDAI.kirimAntre('guru.omr.submit', { jadwalId: jadwalId, siswaId: hasilBaca.siswaId, jawaban: jawaban });
+      toast('⟳ Disimpan luring — akan disinkronkan', 4000); $('mnForm').innerHTML = '';
+    });
+}
+function kumpulkanVerifDari(root) {
+  var jawaban = {};
+  hasilBaca.urut.forEach(function (s) {
+    if (s.bentuk === 'PG') {
+      var on = root.querySelector('[data-soal="' + s.soalId + '"][data-t="pg"].on');
+      jawaban[s.soalId] = on ? Number(on.dataset.i) : undefined;
+    } else if (s.bentuk === 'PGK_MCMA') {
+      var arr = []; root.querySelectorAll('[data-soal="' + s.soalId + '"][data-t="mcma"].on').forEach(function (x) { arr.push(Number(x.dataset.i)); });
+      jawaban[s.soalId] = arr.length ? arr : undefined;
+    } else if (s.bentuk === 'PGK_KATEGORI') {
+      jawaban[s.soalId] = s.opsi.pernyataan.map(function (p, pi) {
+        var on = root.querySelector('[data-soal="' + s.soalId + '"][data-p="' + pi + '"].on, [data-soal="' + s.soalId + '"][data-p="' + pi + '"].on-s');
+        return on ? on.dataset.v : null;
+      });
+    } else {
+      var inp = root.querySelector('[data-soal="' + s.soalId + '"][data-t="isian"]');
+      jawaban[s.soalId] = inp && inp.value.trim() ? inp.value.trim() : undefined;
+    }
+  });
+  return jawaban;
+}
+
+// ---------- hasil ----------
+function muatHasil() {
+  var antre = PANDAI.antrean().filter(function (a) { return a.action === 'guru.omr.submit'; }).length;
+  $('antreanInfo').innerHTML = antre ? '<span class="chip c-kuning">⟳ ' + antre + ' hasil menunggu sinkronisasi</span>' : '<span class="chip c-hijau">✔ Semua tersinkron</span>';
+  PANDAI.api('guru.monitor', { jadwalId: jadwalId }).then(function (data) {
+    PESERTA = data;
+    var tb = $('tabelHasil'); tb.innerHTML = '';
+    data.forEach(function (p) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + esc(p.nama) + '</td>' +
+        '<td><span class="chip ' + (p.status === 'selesai' ? 'c-hijau' : 'c-abu') + '">' + p.status + '</span></td>' +
+        '<td><b>' + (p.skor !== '' && p.skor !== undefined ? p.skor : '—') + '</b></td>';
+      tb.appendChild(tr);
+    });
+  }).catch(function (err) { $('tabelHasil').innerHTML = '<tr><td colspan="3" class="kosong">⚠ ' + esc(err.message) + '</td></tr>'; });
+}
+
+muat();
+</script>
+</body>
+</html>
