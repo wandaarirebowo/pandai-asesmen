@@ -59,6 +59,11 @@ h2.judul-hal small{font-weight:400;font-size:12.5px;color:#6b7690;display:block;
 .filter button{font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
   border:2px solid rgba(43,58,85,.25);background:#fff;color:var(--tinta);border-radius:999px;padding:6px 12px;}
 .filter button.aktif{background:var(--tinta);color:#fff;border-color:var(--tinta);}
+.form select:disabled{background:#F1F2F5;color:#9AA2B2;border-color:rgba(43,58,85,.12);}
+.grup-hierarki{display:flex;align-items:center;gap:8px;margin:15px 0 7px;}
+.grup-hierarki .jalur{flex:1;font-size:11.5px;font-weight:800;color:#6b7690;line-height:1.35;}
+.grup-hierarki .jml{flex:none;background:var(--kuning);border:2px solid var(--tinta);color:var(--tinta);
+  border-radius:999px;padding:1px 9px;font-size:11px;font-weight:800;}
 .soal-item{border:2px solid rgba(43,58,85,.12);border-radius:14px;padding:11px 12px;margin-bottom:9px;background:#FFFDF5;}
 .soal-item .atas{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;align-items:center;}
 .soal-item p{margin:4px 0 8px;font-size:13.5px;line-height:1.5;}
@@ -118,6 +123,26 @@ h2.judul-hal small{font-weight:400;font-size:12.5px;color:#6b7690;display:block;
     <button class="btn btn-utama" style="flex:1" onclick="bukaEditor(null)">➕ Tambah Soal</button>
     <button class="btn" onclick="muatSemua()">⟳ Muat ulang</button>
   </div>
+  <div class="filter" id="tabJenisBank">
+    <button class="aktif" data-j="sumatif">A. Sumatif</button>
+    <button data-j="tryout">B. Try Out TKA</button>
+  </div>
+
+  <div class="kartu form" style="padding:12px">
+    <div id="bankJalurSumatif">
+      <label>Mata pelajaran</label><select id="bMapelS"></select>
+      <label>Kelas / fase</label><select id="bKelas"></select>
+      <label>Capaian Pembelajaran (CP 2025 — per elemen)</label><select id="bCP"></select>
+      <label>Tujuan Pembelajaran (turunan CP / ATP)</label><select id="bTP"></select>
+    </div>
+    <div id="bankJalurTryout" style="display:none">
+      <label>Mata pelajaran (mata uji TKA)</label>
+      <select id="bMapelT"><option value="BIN">Bahasa Indonesia</option><option value="MTK">Matematika</option></select>
+      <label>Lingkup kerangka TKA SD/MI</label><select id="bTKA"></select>
+    </div>
+    <button class="btn btn-mini" style="margin-top:10px" onclick="resetFilterBank()">↺ Tampilkan semua</button>
+  </div>
+
   <div class="filter" id="filterStatus">
     <button class="aktif" data-f="semua">Semua</button>
     <button data-f="draf">Draf</button>
@@ -125,6 +150,7 @@ h2.judul-hal small{font-weight:400;font-size:12.5px;color:#6b7690;display:block;
     <button data-f="revisi">Perlu revisi</button>
     <button data-f="disetujui">Disetujui</button>
   </div>
+  <p class="kosong" id="hitungSoal" style="margin:0 0 6px;text-align:left"></p>
   <div id="daftarSoal"><p class="kosong">Memuat…</p></div>
 </section>
 
@@ -289,7 +315,7 @@ var $ = function (id) { return document.getElementById(id); };
 var SESI = PANDAI.sesi();
 var REF = { mapel: [], cp: [], tp: [], tka: [] };
 var SOAL = [], PAKET = [], STIMULUS = [];
-var filterAktif = 'semua', kategoriPaket = 'sumatif';
+var filterAktif = 'semua', kategoriPaket = 'sumatif', jenisBank = 'sumatif';
 var editSoalId = null, editPaketId = null, butirTerpilih = [];
 
 // ---------- penjaga sesi ----------
@@ -346,8 +372,92 @@ function siapkanPilihan() {
   var kelasArr = [6, 5, 4, 3, 2, 1].map(function (k) { return [k, 'Kelas ' + k + ' (Fase ' + faseKelas(k) + ')']; });
   isiSelect($('fKelas'), kelasArr); isiSelect($('rKelas'), kelasArr);
   segarkanCP('f'); segarkanCP('r'); segarkanTKA('f'); segarkanTKA('r');
+  siapkanFilterBank();
   segarkanStimulus();
 }
+
+// ---------- filter hierarki bank soal ----------
+// Setiap tingkat punya opsi "semua" (nilai '') agar pembuat soal bisa menelusuri
+// longgar (mis. seluruh mapel) maupun sampai ke satu TP.
+function siapkanFilterBank() {
+  isiSelect($('bMapelS'), [['', '— Semua mata pelajaran —']]
+    .concat(REF.mapel.map(function (m) { return [m.mapelId, m.nama]; })));
+  isiSelect($('bKelas'), [['', '— Semua kelas / fase —']]
+    .concat([6, 5, 4, 3, 2, 1].map(function (k) { return [k, 'Kelas ' + k + ' (Fase ' + faseKelas(k) + ')']; })));
+  segarkanCPBank(); segarkanTKABank();
+}
+function segarkanCPBank() {
+  var mapel = $('bMapelS').value, kelas = Number($('bKelas').value);
+  var arr = [['', '— Semua Capaian Pembelajaran —']];
+  if (mapel) {
+    REF.cp.filter(function (c) { return c.mapelId === mapel && (!kelas || String(c.fase) === faseKelas(kelas)); })
+      .forEach(function (c) { arr.push([c.cpId, 'Elemen: ' + c.elemen]); });
+  }
+  isiSelect($('bCP'), arr);
+  $('bCP').disabled = !mapel;          // CP baru bermakna setelah mapel dipilih
+  segarkanTPBank();
+}
+function segarkanTPBank() {
+  var cpId = $('bCP').value, kelas = Number($('bKelas').value);
+  var arr = [['', '— Semua Tujuan Pembelajaran —']];
+  if (cpId) {
+    var semua = REF.tp.filter(function (t) { return t.cpId === cpId; });
+    var cocok = semua.filter(function (t) { return !kelas || Number(t.kelas) === kelas; });
+    cocok.forEach(function (t) { arr.push([t.tpId, 'TP ' + t.kode + ' — ' + String(t.deskripsiTP).slice(0, 70)]); });
+    // jelaskan sebabnya bila kosong: beda kelas dalam satu fase, atau referensi belum diisi
+    if (!cocok.length) {
+      var kelasAda = [];
+      semua.forEach(function (t) { if (kelasAda.indexOf(t.kelas) === -1) kelasAda.push(t.kelas); });
+      arr[0][1] = semua.length
+        ? '(CP ini tidak punya TP di kelas ' + kelas + ' — adanya di kelas ' + kelasAda.sort().join(', ') + ')'
+        : '(referensi TP untuk CP ini belum diisi dinas)';
+    }
+  }
+  isiSelect($('bTP'), arr);
+  $('bTP').disabled = !cpId;
+}
+function segarkanTKABank() {
+  var mapel = $('bMapelT').value;
+  var arr = [['', '— Semua lingkup kerangka TKA —']];
+  REF.tka.filter(function (t) { return t.mapelId === mapel; })
+    .forEach(function (t) { arr.push([t.tkaId, labelTKA(t)]); });
+  isiSelect($('bTKA'), arr);
+}
+function resetFilterBank() {
+  $('bMapelS').value = ''; $('bKelas').value = '';
+  segarkanCPBank(); $('bTKA').value = ''; gambarSoal();
+}
+/** Sejalan dengan jalurSoal(): apa pun selain 'sumatif' diperlakukan sebagai try out. */
+function jenisSoal(s) { return s.kategoriBank === 'sumatif' ? 'sumatif' : 'tryout'; }
+/** Soal lolos bila jenisnya cocok dan setiap tingkat yang dipilih cocok. */
+function cocokHierarki(s) {
+  if (jenisSoal(s) !== jenisBank) return false;
+  if (jenisBank === 'sumatif') {
+    if ($('bMapelS').value && s.mapelId !== $('bMapelS').value) return false;
+    if ($('bKelas').value && String(s.kelas) !== $('bKelas').value) return false;
+    if ($('bCP').value && s.cpId !== $('bCP').value) return false;
+    if ($('bTP').value && s.tpId !== $('bTP').value) return false;
+    return true;
+  }
+  if ($('bMapelT').value && s.mapelId !== $('bMapelT').value) return false;
+  if ($('bTKA').value && s.tkaId !== $('bTKA').value) return false;
+  return true;
+}
+['bMapelS', 'bKelas'].forEach(function (id) {
+  $(id).addEventListener('change', function () { segarkanCPBank(); gambarSoal(); });
+});
+$('bCP').addEventListener('change', function () { segarkanTPBank(); gambarSoal(); });
+$('bTP').addEventListener('change', gambarSoal);
+$('bMapelT').addEventListener('change', function () { segarkanTKABank(); gambarSoal(); });
+$('bTKA').addEventListener('change', gambarSoal);
+$('tabJenisBank').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#tabJenisBank button').forEach(function (x) { x.classList.remove('aktif'); });
+  b.classList.add('aktif'); jenisBank = b.dataset.j;
+  $('bankJalurSumatif').style.display = jenisBank === 'sumatif' ? '' : 'none';
+  $('bankJalurTryout').style.display = jenisBank === 'tryout' ? '' : 'none';
+  gambarSoal();
+});
 function segarkanCP(pfx) {
   var mapel = $(pfx + (pfx === 'f' ? 'MapelS' : 'MapelS')).value;
   var kelas = Number($(pfx + 'Kelas').value);
@@ -453,22 +563,51 @@ function jalurSoal(s) {
   var t = REF.tka.filter(function (x) { return x.tkaId === s.tkaId; })[0];
   return 'Try Out · ' + namaMapel(s.mapelId) + (t ? ' · ' + t.lingkup + ' · ' + (t.kompetensi || '') : '');
 }
+function kartuSoal(s) {
+  var lb = LB[s.bentuk] || [s.bentuk, 'c-abu'], ls = LS[s.statusTelaah] || [s.statusTelaah, 'c-abu'];
+  var div = document.createElement('div'); div.className = 'soal-item';
+  div.innerHTML = '<div class="atas"><span class="chip ' + lb[1] + '">' + lb[0] + '</span>' +
+    (s.stimulusId ? '<span class="chip c-biru">grup 📖</span>' : '') +
+    '<span class="chip ' + ls[1] + '">' + ls[0] + '</span>' +
+    '<span style="font-size:11px;color:#8a93a6;margin-left:auto">' + s.soalId + '</span></div>' +
+    '<p><b>' + esc(String(s.pertanyaan).slice(0, 140)) + '</b><br>' +
+    '<span style="font-size:11.5px;color:#6b7690">Level ' + esc(s.levelKognitif) + '</span></p>' +
+    (s.catatanTelaah ? '<div class="catatan-pengawas">📝 Pengawas: ' + esc(s.catatanTelaah) + '</div>' : '') +
+    '<div class="aksi"><button class="btn btn-mini" onclick="bukaEditor(\'' + s.soalId + '\')">✏️ Edit</button></div>';
+  return div;
+}
 function gambarSoal() {
   var w = $('daftarSoal'); w.innerHTML = '';
-  var data = SOAL.filter(function (s) { return filterAktif === 'semua' ? true : s.statusTelaah === filterAktif; });
-  if (!data.length) { w.innerHTML = '<p class="kosong">Belum ada soal pada filter ini.</p>'; return; }
+  var data = SOAL.filter(function (s) {
+    return cocokHierarki(s) && (filterAktif === 'semua' || s.statusTelaah === filterAktif);
+  });
+
+  // hitungan per jenis agar soal yang tersembunyi karena tab tetap jelas keberadaannya
+  var nSum = 0;
+  SOAL.forEach(function (s) { if (jenisSoal(s) === 'sumatif') nSum++; });
+  var tombol = document.querySelectorAll('#tabJenisBank button');
+  tombol[0].textContent = 'A. Sumatif (' + nSum + ')';
+  tombol[1].textContent = 'B. Try Out TKA (' + (SOAL.length - nSum) + ')';
+  $('hitungSoal').textContent = data.length + ' soal tampil dari ' + SOAL.length + ' soal di bank Anda.';
+
+  if (!data.length) {
+    w.innerHTML = '<p class="kosong">Tidak ada soal pada hierarki &amp; status ini. ' +
+      'Longgarkan pilihan di atas atau tekan “Tampilkan semua”.</p>';
+    return;
+  }
+  // kelompokkan menurut jalur hierarkinya, lalu tampilkan berkelompok
+  var grup = {}, urut = [];
   data.forEach(function (s) {
-    var lb = LB[s.bentuk] || [s.bentuk, 'c-abu'], ls = LS[s.statusTelaah] || [s.statusTelaah, 'c-abu'];
-    var div = document.createElement('div'); div.className = 'soal-item';
-    div.innerHTML = '<div class="atas"><span class="chip ' + lb[1] + '">' + lb[0] + '</span>' +
-      (s.stimulusId ? '<span class="chip c-biru">grup 📖</span>' : '') +
-      '<span class="chip ' + ls[1] + '">' + ls[0] + '</span>' +
-      '<span style="font-size:11px;color:#8a93a6;margin-left:auto">' + s.soalId + '</span></div>' +
-      '<p><b>' + esc(String(s.pertanyaan).slice(0, 140)) + '</b><br>' +
-      '<span style="font-size:11.5px;color:#6b7690">' + jalurSoal(s) + ' · ' + s.levelKognitif + '</span></p>' +
-      (s.catatanTelaah ? '<div class="catatan-pengawas">📝 Pengawas: ' + esc(s.catatanTelaah) + '</div>' : '') +
-      '<div class="aksi"><button class="btn btn-mini" onclick="bukaEditor(\'' + s.soalId + '\')">✏️ Edit</button></div>';
-    w.appendChild(div);
+    var k = jalurSoal(s);
+    if (!grup[k]) { grup[k] = []; urut.push(k); }
+    grup[k].push(s);
+  });
+  urut.sort();
+  urut.forEach(function (k) {
+    var h = document.createElement('div'); h.className = 'grup-hierarki';
+    h.innerHTML = '<span class="jalur">' + esc(k) + '</span><span class="jml">' + grup[k].length + '</span>';
+    w.appendChild(h);
+    grup[k].forEach(function (s) { w.appendChild(kartuSoal(s)); });
   });
 }
 $('filterStatus').addEventListener('click', function (e) {
