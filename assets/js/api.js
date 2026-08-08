@@ -153,6 +153,10 @@
       var l = document.createElement('link'); l.rel = 'manifest'; l.href = akar + 'manifest.webmanifest';
       document.head.appendChild(l);
     }
+    if (!document.querySelector('link[rel="icon"]')) {
+      var f = document.createElement('link'); f.rel = 'icon'; f.type = 'image/png'; f.href = akar + 'assets/icons/icon-192.png';
+      document.head.appendChild(f);
+    }
     if (!document.querySelector('link[rel="apple-touch-icon"]')) {
       var a = document.createElement('link'); a.rel = 'apple-touch-icon'; a.href = akar + 'assets/icons/icon-192.png';
       document.head.appendChild(a);
